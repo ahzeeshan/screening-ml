@@ -1,0 +1,20 @@
+Scheme for Linear Regression
+
+- Make datasets for different symmetries - matlab arrays with Cij
+- Make feature datasets for different symmetries - matlab arrays with feature data - normalized
+
+- Perform linear regression for each symmetry type
+- Perform regularization, feature reduction 
+- Predict elastic tensor for each symmetry
+
+Notes:
+
+IEEE standards of crystal orientation for the elastic tensor of different materials
+Problem of point groups:
+
+Systems with 
+
+1 type of elastic tensor: triclinic, monoclinic, orthorhombic, cubic, hexagonal
+2 - Tetragonal 6 and 7 constants; trigonal 6 and 7
+
+Hexagonal crystal system has an incorrect asymmetric entry for the elastic tensor

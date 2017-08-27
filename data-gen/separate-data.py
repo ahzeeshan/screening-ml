@@ -1,6 +1,6 @@
 import json 
 
-with open('Li-cmpd-data.json') as f:
+with open('Li-cmpd-data-new.json') as f:
     data = json.load(f)
 
 size_data = len(data)

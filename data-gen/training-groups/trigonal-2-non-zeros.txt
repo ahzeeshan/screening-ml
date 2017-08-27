@@ -1,0 +1,5 @@
+i j val index mp formula
+1 5 -8.0 14 mp-4002 Li2ZrF6
+2 5 8.0 14 mp-4002 Li2ZrF6
+1 5 27.0 18 mp-9752 Li2NbF6
+2 5 -27.0 18 mp-9752 Li2NbF6

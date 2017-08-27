@@ -1,0 +1,10 @@
+Equalities
+subsets mp index formula disparity
+
+Crosses
+(i,j) mp formula disparity
+(6, 6) mp-764362 LiNiF3 0.5
+(6, 6) mp-765545 LiVF3 0.5
+
+Parities
+subsets mp formula disparity

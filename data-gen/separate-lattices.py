@@ -20,6 +20,9 @@ trigonal_ts1 = []
 trigonal_ts2 = []
 
 path = 'training-groups/'
+nfname = 'negative-eig.txt'
+with open(nfname,'w') as f:
+            f.write('id\n')
 
 for index, elem_data in enumerate(ts_data):
     st = pymatgen.Structure.from_str(elem_data['cif'], fmt = "cif")
@@ -66,9 +69,7 @@ for index, elem_data in enumerate(ts_data):
 
     else:
         print 'Negative eigen value found'
-        nfname = 'negative-eig.txt'
-        mode = 'a' if os.path.exists(nfname) else 'w'
-        with open(nfname,mode) as f:
+        with open(nfname,'a') as f:
             f.write(elem_data['task_id']+'\n')
 
 with open(path+'cubic-training-set-data.json','w') as ctd:
@@ -83,17 +84,17 @@ with open(path+'orthorhombic-training-set-data.json','w') as  otd:
 with open(path+'hexagonal-training-set-data.json','w') as htd:
     json.dump(hexagonal_ts,htd)
     
-with open(path+'tetragonal-training-set-data-1.json','w') as ttd:
+with open(path+'tetragonal-1-training-set-data.json','w') as ttd:
     json.dump(tetragonal_ts1,ttd)
-with open(path+'tetragonal-training-set-data-2.json','w') as ttd:
+with open(path+'tetragonal-2-training-set-data.json','w') as ttd:
     json.dump(tetragonal_ts2,ttd)
 
 with open(path+'triclinic-training-set-data.json','w') as tctd:
     json.dump(triclinic_ts,tctd)
 
-with open(path+'trigonal-training-set-data-1.json','w') as ttgd:
+with open(path+'trigonal-1-training-set-data.json','w') as ttgd:
     json.dump(trigonal_ts1,ttgd)    
-with open(path+'trigonal-training-set-data-2.json','w') as ttgd:
+with open(path+'trigonal-2-training-set-data.json','w') as ttgd:
     json.dump(trigonal_ts2,ttgd)
 
 

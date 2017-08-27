@@ -1,0 +1,36 @@
+cubic 96
+hexagonal 44
+orthorhombic 45
+monoclinic 51
+tetragonal-1 4
+tetragonal-2 34
+trigonal-1 2
+trigonal-2 40
+
+Materials not following symmetries:
+
+cubic 
+hexagonal 
+orthorhombic 
+monoclinic mp-3700 mp-755570 mp-764434 mp-764698 mp-769789 mp-775036 mp-775097
+tetragonal-1 mp-795
+tetragonal-2 mp-7350 mp-8804 mp-3503 mp-19970 mp-773331
+trigonal-1 
+trigonal-2 mp-4002 mp-9752
+
+
+Non Zeros:
+Monoclinic - 7
+Trigonal-2 - 2
+
+Symmetry:
+Tetragonal-1 - 1
+Tetragonal-2 - 5
+
+Reduced plan:
+cubic 96
+hexagonal 44
+orthorhombic 45
+monoclinic 51-7=44
+tetragonal-2 34-5=29
+trigonal-2 40-2=38

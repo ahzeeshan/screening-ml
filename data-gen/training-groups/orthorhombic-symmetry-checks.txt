@@ -1,0 +1,8 @@
+Equalities
+subsets mp index formula disparity
+
+Crosses
+(i,j) mp formula disparity
+
+Parities
+subsets mp formula disparity

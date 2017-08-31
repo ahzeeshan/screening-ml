@@ -1,0 +1,18 @@
+1 Volume per atom
+2 Standard deviation in Li neighbour count 
+3 Standard deviation in Li bond ionicity
+4 Li bond ionicity
+5 Li neighbour count
+6 Li–Li bonds per Li
+7 Bond ionicity of sublattice
+8 Sublattice neighbour count
+9 Anion framework coordination
+10 Minimum anion–anion separation distance 
+11 Volume per anion 
+12 Minimum Li–anion separation distance
+13 Electronegativity of sublatticea 
+14 Packing fraction of full crystal 
+15 Packing fraction of sublattice 
+16 Ratio of features (4) and (7)
+17 Ratio of features (5) and (8) 
+18 formation_energy_per_atom

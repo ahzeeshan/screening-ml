@@ -1,14 +1,16 @@
 tic;
-load(fullfile('..','data-gen','cubic-data.mat')) % xdata and ydata
+lattice = 'orthorhombic';
+load(fullfile('..','data-gen',strcat(lattice,'-data.mat'))) % xdata and ydata
+load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) % xdata and ydata
 X_mat = xdata;
 % Loading the required files 
-lattice = 'cubic';
+
 %load(strcat('coefficient_',lattice,'.mat')) % Its output is "coeffs variable"
 %load(strcat(lattice,'-training-features-MATLAB.mat')) % Its output is "X_mat"
 %load(strcat(lattice,'-non-training-feature.mat')) %Its output is "cubic_nt"
 %load(strcat(lattice,'_feature_list.mat'))% Its output is feature_list
 % In next few lines we convert the python indices into matlab indices 
-feature_arr = [2 9 11 13 15 17];
+%feature_arr = [2 9 11 13 15 17];
 % 
 % for i = 1:1:max(size(feature_list))
 %     feature_list{i} = double(feature_list{i});
@@ -27,7 +29,7 @@ cubic_nt = xntdata; % 626 by 18
 for coeff_num = 1:1:num_coeffs % for all the coefficients 
 % 1 - C11  % 2 - C12 % 3 - C44
 %% Loading the data and normalising it to [-1 ,1]
-%feature_arr = feature_list{coeff_num};   
+feature_arr = feature_list{coeff_num};   
 X1 = X_mat(:,feature_arr);
 non_training_yy = cubic_nt(:,feature_arr)';
 
@@ -107,9 +109,10 @@ for random_fold = 1:1:num_random_folds
                 net = fitnet(layer_size,trainFcn);
                 net = configure(net,x_train, t_train);
                 net.trainParam.showWindow = 0;
-                net.divideParam.trainRatio = 60/100;
-                net.divideParam.valRatio = 25/100;
-                net.divideParam.testRatio = 15/100;
+                net.divideParam.trainRatio = 100/100;
+                net.divideParam.valRatio = 0/100;
+                net.divideParam.testRatio = 0/100;
+                net.trainParam.epochs
         % %         net.divideFcn = 'divideind';
         % %         size_divide = size(t_train);
         % %         num1 = floor(size_divide(2)*0.6);
@@ -217,6 +220,7 @@ var_neuron_size_cell_array{coeff_num} = var_neuron_size;
 
 
 end
+
 save(strcat('hidden_layersize_',lattice,'.mat'),'hidden_layer_size_store');
 save(strcat(lattice,'_err_neuron_size.mat'),'err_neuron_size_cell_array');
 save(strcat(lattice,'_var_neuron_size.mat'),'var_neuron_size_cell_array');

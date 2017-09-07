@@ -3,7 +3,7 @@ Scheme for Linear Regression
 - Make datasets for different symmetries - matlab arrays with Cij
 - Make feature datasets for different symmetries - matlab arrays with feature data - normalized
 
-- Perform linear regression for each symmetry type
+- Perform linear regression for each symmetry type - k fold validation for feature selection
 - Perform regularization, feature reduction 
 - Predict elastic tensor for each symmetry
 

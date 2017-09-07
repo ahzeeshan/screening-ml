@@ -109,9 +109,9 @@ for random_fold = 1:1:num_random_folds
                 net = fitnet(layer_size,trainFcn);
                 net = configure(net,x_train, t_train);
                 net.trainParam.showWindow = 0;
-                net.divideParam.trainRatio = 80/100;
-                net.divideParam.valRatio = 20/100;
-                net.divideParam.testRatio = 0/100;
+                net.divideParam.trainRatio = 60/100;
+                net.divideParam.valRatio = 25/100;
+                net.divideParam.testRatio = 15/100;
         % %         net.divideFcn = 'divideind';
         % %         size_divide = size(t_train);
         % %         num1 = floor(size_divide(2)*0.6);
@@ -219,6 +219,7 @@ var_neuron_size_cell_array{coeff_num} = var_neuron_size;
 
 
 end
+toc;
 save(strcat('hidden_layersize_',lattice,'.mat'),'hidden_layer_size_store');
 save(strcat(lattice,'_err_neuron_size.mat'),'err_neuron_size_cell_array');
 save(strcat(lattice,'_var_neuron_size.mat'),'var_neuron_size_cell_array');

@@ -3,6 +3,7 @@ close all
 clc
 tic;
 lattice = fileread('lattice-type.txt');
+disp(lattice)
 load(fullfile('..','data-gen',strcat(lattice,'-data.mat'))) % xdata and ydata
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) 
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')))

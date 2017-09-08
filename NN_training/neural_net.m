@@ -1,8 +1,6 @@
-function [ yfit ] = neural_net(XTRAIN,ytrain,XTEST,layer_size)
+function [ yfit ] = neural_net(XTRAIN,ytrain,XTEST,layer_size, sample_test, max_index, val_perf_reqd, reg_tr_reqd)
 % This function returns yfit of the XTEST corresponding to neural network
 % model
-sample_test = 20;
-max_index = 1000;
 trainFcn = 'trainlm';
 XTRAIN = XTRAIN';
 ytrain = ytrain';
@@ -47,12 +45,10 @@ for random_weights = 1:1:sample_test
         %[reg_test,~,~] = regression(testTarg, testOut)
         val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
         tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
-        bool_var = (val_perf>0.05)||(reg_tr<0.85); % Training parameter
-        val_perf;
-        tr_perf;
+        bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
         %net
         if val_perf<val_min && tr_perf<tr_perf_min
-            val_min = val_perf;
+            val_min = val_perf; 
             tr_perf_min = tr_perf;
             net_min = net;
             tr_min = tr;

@@ -1,5 +1,8 @@
 %This code will take the numner of neurons and do the calcs
 %%
+clear all
+close all
+clc
 tic;
 lattice = 'cubic';
 load(strcat(lattice,'_results.mat'))
@@ -10,6 +13,7 @@ load(fullfile('..','Linear',strcat('features_',lattice,'.mat')))
 
 % Its output is feature_list
 %% User input data
+X_mat = xdata;
 coeffs = ydata;
 num_coeffs = size(coeffs,2);
 cubic_nt = xntdata;
@@ -40,16 +44,19 @@ parfor coeff_num = 1:1:num_coeffs
     [t, t_recover] = mapminmax(t_yy); %Mapping the coefficients as well in [-1,1]
     Y = t';
     %% Looping
-    random_weights = 1000;
-    %%trainFcn = 'trainlm';
-    XTRAIN = XTRAIN';
-    ytrain = ytrain';
-    XTEST = XTEST';
+    sample_test = 1000;
+    trainFcn = 'trainlm';
+    XTRAIN = x;
+    ytrain = t;
+    %XTEST = XTEST';
     val_min = 1;
     tr_perf_min = 1;
     net_min = [];
+    val_perf_reqd=0.005;
+    reg_tr_reqd=0.95;
+    max_index = 1000;
     for random_weights = 1:1:sample_test
-        net = fitnet(layer_size,trainFcn);
+        net = fitnet(hidden_layer_size,trainFcn);
         net = configure(net,XTRAIN,ytrain);
         net.trainParam.showWindow = 0;
         net.divideParam.trainRatio = 80/100;
@@ -122,12 +129,12 @@ parfor coeff_num = 1:1:num_coeffs
         %tot_err(random_weights) = mean((ytrain-out_train).^2);
         %net_collection{random_weights} = net;
     end
-    %% Post processing
-    net_storage_complete{coeff_num} = net_storage;
-    index_out_coeffs{coeff_num} = ind_out;
-    test_err_complete{coeff_num} = test_err;
+    net_storage_complete{coeff_num} = net_min;
+    %index_out_coeffs{coeff_num} = ind_out;
+    %test_err_complete{coeff_num} = test_err;
 end
 
-save('cubic_net_storage_complete24Jul.mat','net_storage_complete');
-save('cubic_test_err_complete24Jul.mat','test_err_complete');
-save('cubic_index_partial_trained24Jul.mat','index_out_coeffs');
+save(strcat(lattice,'_final_results.mat'),'net_storage_complete')
+%save('cubic_net_storage_complete24Jul.mat','net_storage_complete');
+%save('cubic_test_err_complete24Jul.mat','test_err_complete');
+%save('cubic_index_partial_trained24Jul.mat','index_out_coeffs');

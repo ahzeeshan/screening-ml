@@ -62,8 +62,8 @@ mse_fold_av = reshape(mse_fold_av, [num_coeffs, length(hidden_layer_size_range)]
 [mse_min,ind_min_av] = min(mse_fold_av,[],2);
 hidden_layer_av = ind_min_av;
 
-save(strcat(lattice,'_mse_layer_size.mat'),'mse_size');
-save(strcat(lattice,'_hidden_layer_min.mat'),'hidden_layer_min');
+%save(strcat(lattice,'_mse_layer_size.mat'),'mse_size');
+%save(strcat(lattice,'_hidden_layer_min.mat'),'hidden_layer_min');
 save(strcat(lattice,'_results.mat'),'mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
 %save(strcat('hidden_layersize_',lattice,'.mat'),'hidden_layer_size_store');
 %save(strcat(lattice,'_err_neuron_size.mat'),'err_neuron_size_cell_array');

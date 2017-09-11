@@ -27,7 +27,7 @@ def generate_Xdata(symmetry):
 				if mp == elem['task_id']:
 					struc = pymatgen.Structure.from_str(data[index]['cif'],fmt="cif")
 					Lisites = [i for i in range(len(struc)) if struc[i].specie.symbol=='Li']
-					f = VCF(structure = struc)
+					f = VCF(structure = struc, allow_pathological=True)
 					sum = 0
 					for j in Lisites:
 						sum += f.get_coordination_number(j)

@@ -30,19 +30,7 @@ for random_weights = 1:1:sample_test
         end
         trTarg = ytrain(tr.trainInd);
         trOut = out_train(tr.trainInd);
-        
-        %vOut = out_train(tr.valInd);
-        %vTarg = ytrain(tr.valInd);
-        
-        %testOut = out_train(tr.testInd);
-        %testTarg = ytrain(tr.testInd);
-        
-        %train_err_val = mean((trTarg-trOut).^2);
-        %test_err_val = mean((testTarg-testOut).^2);
-        %val_err_val  = mean((vTarg-vOut).^2);
         [reg_tr,~,~] = regression(trTarg, trOut);
-        %[reg_val,~,~] = regression(vTarg, vOut);
-        %[reg_test,~,~] = regression(testTarg, testOut)
         val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
         tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
         bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter

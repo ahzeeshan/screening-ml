@@ -11,7 +11,6 @@ load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')))
 load(fullfile('..','data-gen',strcat(lattice,'-data.mat'))) % xdata and ydata
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat')))
 
-% Its output is feature_list
 %% User input data
 X_mat = xdata;
 coeffs = ydata;
@@ -19,10 +18,13 @@ num_coeffs = size(coeffs,2);
 cubic_nt = xntdata;
 
 net_storage_complete = cell(num_coeffs,1);
+tr_storage_complete = cell(num_coeffs,1);
 test_err_complete = cell(num_coeffs,1);
 index_out_coeffs = cell(num_coeffs,1);
+
 % cubic_nt = cubic_nt';  % Just converting the array to transpose %Now this becomes 692X13
 parfor coeff_num = 1:1:num_coeffs
+    coeff_num
     hidden_layer_size = hidden_layer_av(coeff_num); % you can provide a row vector which can represent if we need multiple hidden layers
     % pre processing normalization
     feature_arr = feature_list{coeff_num};
@@ -49,23 +51,27 @@ parfor coeff_num = 1:1:num_coeffs
     XTRAIN = x;
     ytrain = t;
     %XTEST = XTEST';
-    val_min = 1;
-    tr_perf_min = 1;
-    net_min = [];
-    val_perf_reqd=0.05;
-    reg_tr_reqd=0.85;
+    
+    val_perf_reqd=0.03;
+    reg_tr_reqd=0.9;
     max_index = 1000;
     for random_weights = 1:1:sample_test
+        val_min = 1;
+        tr_perf_min = 1;
+        net_min = [];
+        bool_var = 1;
+        index_watch = 1;
+        ind_out(random_weights) = 0; % Flag for whether it found within 1000 iters 0<->yes
+        
         net = fitnet(hidden_layer_size,trainFcn);
         net = configure(net,XTRAIN,ytrain);
         net.trainParam.showWindow = 0;
         net.divideParam.trainRatio = 80/100;
         net.divideParam.valRatio = 20/100;
         net.divideParam.testRatio = 0/100;
-        net.performParam.regularization = 0;
-        bool_var = 1;
-        index_watch = 1;
-        %net_min = [];
+        net.performParam.regularization = 0.01;
+        net.trainParam.max_fail = 15;
+        
         while((bool_var))
             init(net);
             [net,tr] = train(net,XTRAIN,ytrain);
@@ -93,7 +99,8 @@ parfor coeff_num = 1:1:num_coeffs
             val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
             tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
             bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
-            %net
+            %val_perf
+            %tr_perf
             if val_perf<val_min && tr_perf<tr_perf_min
                 val_min = val_perf;
                 tr_perf_min = tr_perf;
@@ -115,10 +122,15 @@ parfor coeff_num = 1:1:num_coeffs
                 %             testTarg = t_test_min;
                 %             net = net_min;
                 %             out_train = net(XTRAIN);
+                ind_out(random_weights) = 1;
                 break;
             end
             index_watch = index_watch +1;
+            
         end
+        net_storage{random_weights} = net_min;
+        tr_storage{random_weights} = tr_min;
+        random_weights
         %test_k_fold = net(XTEST);
         %t_test_total_Targ = cat(2,testTarg,t_test);
         %t_test_total_Out = cat(2,testOut,test_k_fold);
@@ -129,12 +141,13 @@ parfor coeff_num = 1:1:num_coeffs
         %tot_err(random_weights) = mean((ytrain-out_train).^2);
         %net_collection{random_weights} = net;
     end
-    net_storage_complete{coeff_num} = net_min;
-    %index_out_coeffs{coeff_num} = ind_out;
+    net_storage_complete{coeff_num} = net_storage;
+    tr_storage_complete{coeff_num} = tr_storage;
+    index_out_coeffs{coeff_num} = ind_out;
     %test_err_complete{coeff_num} = test_err;
 end
-
-save(strcat(lattice,'_final_results.mat'),'net_storage_complete')
+toc;
+save(strcat(lattice,'_final_results.mat'),'net_storage_complete','index_out_coeffs','tr_storage_complete')
 %save('cubic_net_storage_complete24Jul.mat','net_storage_complete');
 %save('cubic_test_err_complete24Jul.mat','test_err_complete');
 %save('cubic_index_partial_trained24Jul.mat','index_out_coeffs');

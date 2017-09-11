@@ -35,7 +35,7 @@ for random_weights = 1:1:sample_test
         tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
         bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
         %net
-        if val_perf<val_min && tr_perf<tr_perf_min
+        if val_perf<val_min %&& tr_perf<tr_perf_min
             val_min = val_perf; 
             tr_perf_min = tr_perf;
             net_min = net;

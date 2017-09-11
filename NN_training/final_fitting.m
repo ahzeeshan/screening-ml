@@ -55,13 +55,17 @@ parfor coeff_num = 1:1:num_coeffs
     val_perf_reqd=0.03;
     reg_tr_reqd=0.9;
     max_index = 1000;
+    ind_out = zeros(sample_test, 1);
+    net_storage = cell(sample_test,1);
+    tr_storage = cell(sample_test,1);
+    
     for random_weights = 1:1:sample_test
         val_min = 1;
         tr_perf_min = 1;
         net_min = [];
         bool_var = 1;
         index_watch = 1;
-        ind_out(random_weights) = 0; % Flag for whether it found within 1000 iters 0<->yes
+        
         
         net = fitnet(hidden_layer_size,trainFcn);
         net = configure(net,XTRAIN,ytrain);
@@ -101,7 +105,8 @@ parfor coeff_num = 1:1:num_coeffs
             bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
             %val_perf
             %tr_perf
-            if val_perf<val_min && tr_perf<tr_perf_min
+            
+            if val_perf<val_min %&& tr_perf<tr_perf_min
                 val_min = val_perf;
                 tr_perf_min = tr_perf;
                 net_min = net;
@@ -125,6 +130,7 @@ parfor coeff_num = 1:1:num_coeffs
                 ind_out(random_weights) = 1;
                 break;
             end
+            ind_out(random_weights) = 0; % Flag for whether it found within 1000 iters 0<->yes
             index_watch = index_watch +1;
             
         end

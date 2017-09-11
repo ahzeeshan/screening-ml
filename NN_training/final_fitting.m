@@ -52,7 +52,7 @@ parfor coeff_num = 1:1:num_coeffs
     ytrain = t;
     %XTEST = XTEST';
     
-    val_perf_reqd=0.03;
+    val_perf_reqd=0.005;
     reg_tr_reqd=0.9;
     max_index = 1000;
     ind_out = zeros(sample_test, 1);

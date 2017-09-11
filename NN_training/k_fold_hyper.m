@@ -13,7 +13,7 @@ X_mat = xdata;
 coeffs = ydata;
 num_coeffs = size(coeffs,2);
 cubic_nt = xntdata; % 626 by 18
-hidden_layer_size_range = (1:15);
+hidden_layer_size_range = (1:10);
 num_kfolds = 5;
 mse_size = zeros(num_coeffs, num_kfolds, length(hidden_layer_size_range));
 hidden_layer_min = zeros(num_coeffs,num_kfolds);
@@ -62,10 +62,5 @@ mse_fold_av = reshape(mse_fold_av, [num_coeffs, length(hidden_layer_size_range)]
 [mse_min,ind_min_av] = min(mse_fold_av,[],2);
 hidden_layer_av = ind_min_av;
 
-%save(strcat(lattice,'_mse_layer_size.mat'),'mse_size');
-%save(strcat(lattice,'_hidden_layer_min.mat'),'hidden_layer_min');
 save(strcat(lattice,'_results.mat'),'mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
-%save(strcat('hidden_layersize_',lattice,'.mat'),'hidden_layer_size_store');
-%save(strcat(lattice,'_err_neuron_size.mat'),'err_neuron_size_cell_array');
-%save(strcat(lattice,'_var_neuron_size.mat'),'var_neuron_size_cell_array');
 toc;

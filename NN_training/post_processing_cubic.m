@@ -9,8 +9,9 @@ load(fullfile('..','data-gen',strcat(lattice,'-data.mat')));
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) ;
 
 % In next few lines we convert the python indices into matlab indices
-num_samples = 1000;
+num_samples = 1;
 X_mat = xdata;
+coeffs = ydata;
 cubic_nt = xntdata;
 cubic_nt = cubic_nt';
 

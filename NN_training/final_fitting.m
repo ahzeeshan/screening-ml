@@ -53,6 +53,7 @@ parfor coeff_num = 1:1:num_coeffs
     %XTEST = XTEST';
     
     val_perf_reqd=0.005;
+    tr_perf_reqd = 0.001;
     reg_tr_reqd=0.9;
     max_index = 1000;
     ind_out = zeros(sample_test, 1);
@@ -102,7 +103,7 @@ parfor coeff_num = 1:1:num_coeffs
             %[reg_test,~,~] = regression(testTarg, testOut)
             val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
             tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
-            bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
+            bool_var = (val_perf>val_perf_reqd)||(tr_perf>tr_perf_reqd)%(reg_tr<reg_tr_reqd); % Training parameter
             %val_perf
             %tr_perf
             

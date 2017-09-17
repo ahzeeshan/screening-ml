@@ -1,6 +1,6 @@
 clear all
-close all
-clc
+%close all
+%clc
 %% Here you should put the predicted valued file with non_training data.
 lattice = 'cubic'
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')));

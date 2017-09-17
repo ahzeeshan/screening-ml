@@ -1,10 +1,10 @@
 %This code will take the numner of neurons and do the calcs
 %%
 clear all
-close all
-clc
+%close all
+%clc
 tic;
-lattice = 'cubic';
+lattice = fileread('lattice-type.txt');
 load(strcat(lattice,'_results.mat'))
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')))
 

@@ -83,7 +83,7 @@ for coeff_num = 1:1:num_coeffs
         net.divideParam.trainRatio = 80/100;
         net.divideParam.valRatio = 20/100;
         net.divideParam.testRatio = 0/100;
-        net.performParam.regularization = 0.01;
+%        net.performParam.regularization = 0.01;
         net.trainParam.max_fail = 15;
         
         while((bool_var))

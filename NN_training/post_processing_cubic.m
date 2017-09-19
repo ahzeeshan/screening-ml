@@ -62,14 +62,17 @@ test_err = zeros(num_samples,num_coeffs);
 sortNchoose = zeros(size_consider,num_coeffs);
 Coeffs_mod = zeros(num_coeffs,size_consider,sz_nt);
 %% Finding the ones with positive definite matrix
-is_posdef = zeros(num_samples,1);
-for i = 1:1:num_samples
-    C11_matrix = Coeffs_cell{i,1};
-    C12_matrix = Coeffs_cell{i,2};
-    C44_matrix = Coeffs_cell{i,3};
-    is_posdef(i) = check_g_vals_all_element_cubic(C11_matrix, C12_matrix, C44_matrix);
-end
+
+% for i = 1:1:num_samples
+%     C11_matrix = Coeffs_cell{i,1};
+%     C12_matrix = Coeffs_cell{i,2};
+%     C44_matrix = Coeffs_cell{i,3};
+%     is_posdef(i) = check_g_vals_all_element_cubic(C11_matrix, C12_matrix, C44_matrix);
+% end
 %%
+for i=1:num_coeffs
+perf(find(ind_full_val==0),:)
+end
 for i=1:num_coeffs
     ind_full = index_out_coeffs{i};
     ind_full_val = find(ind_full==0);
@@ -110,24 +113,18 @@ VM = 1.3e-05;
 Ge = 3.4e09;
 
 chi_new = zeros(sz_nt,sz_put);
+is_posdef = zeros(num_samples,1);
+
 for ns = 1:1:sz_put
-    C11_nt = Coeffs_ensem(1,ns,:);
-    C12_nt = Coeffs_ensem(2,ns,:);
-    C44_nt = Coeffs_ensem(3,ns,:);
-    
     for i = 1:1:sz_nt
-%         C11_mat = C11_nt(i);
-%         C12_mat = C12_nt(i);
-%         C44_mat = C44_nt(i);
-%         cubic_mat(:,:,i) = [C11_mat ,C12_mat,C12_mat,0      ,0      ,0;...
-%             C12_mat ,C11_mat,C12_mat,0      ,0      ,0;...
-%             C12_mat ,C12_mat,C11_mat,0      ,0      ,0;...
-%             0       ,0      ,0      ,C44_mat,0      ,0;...
-%             0       ,0      ,0      ,0      ,C44_mat,0;...
-%             0       ,0      ,0      ,0      ,0      ,C44_mat];
         Cmat = constructC(lattice, Coeffs_ensem(:,ns,i));
+        [~,p] = chol(Cmat);
         cubic_mat(:,:,i) = Cmat; % purely for storage
         if (det(cubic_mat(:,:,i))~=0)
+            [~, p] = chol(cubic_mat(:,:,i));
+            if(p==0)
+                is_posdef(i) = 1;
+            end
             Smat = inv(Cmat);
             G_v(i) = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+3*(Cmat(4,4)+Cmat(5,5)+Cmat(6,6))-Cmat(1,2)-Cmat(2,3)-Cmat(3,1))/15;
             B_v(i) = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+2*(Cmat(1,2)+Cmat(2,3)+Cmat(3,1)))/9;

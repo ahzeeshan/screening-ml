@@ -70,9 +70,9 @@ Coeffs_mod = zeros(num_coeffs,size_consider,sz_nt);
 %     is_posdef(i) = check_g_vals_all_element_cubic(C11_matrix, C12_matrix, C44_matrix);
 % end
 %%
-for i=1:num_coeffs
-perf(find(ind_full_val==0),:)
-end
+% for i=1:num_coeffs
+% perf(find(ind_full_val==0),:)
+% end
 for i=1:num_coeffs
     ind_full = index_out_coeffs{i};
     ind_full_val = find(ind_full==0);

@@ -18,9 +18,6 @@ cubic_nt = xntdata;
 
 %%
 num_coeffs = size(coeffs,2);
-%non_training = cell(num_coeffs,1);
-%tot_inp_recover = cell(num_coeffs,1);
-%t_recover = cell(num_coeffs,1);
 perf = zeros(num_samples, num_coeffs);
 Coeffs_cell = cell(num_samples, num_coeffs);
 for coeff_num = 1:1:num_coeffs
@@ -57,22 +54,18 @@ N_choose = 18;
 k_choose = 9;
 size_consider = N_choose; % Lowest N_choose test errrors were taken
 
+
+ngoodnets = zeros(1,num_coeffs);
+for i=1:num_coeffs
+    ngoodnets(i) = length(find(index_out_coeffs{i}==0)) ;
+end
+
+size_consider = min(ngoodnets);
 sz_nt = size(cubic_nt,1);
 test_err = zeros(num_samples,num_coeffs);
 sortNchoose = zeros(size_consider,num_coeffs);
 Coeffs_mod = zeros(num_coeffs,size_consider,sz_nt);
-%% Finding the ones with positive definite matrix
 
-% for i = 1:1:num_samples
-%     C11_matrix = Coeffs_cell{i,1};
-%     C12_matrix = Coeffs_cell{i,2};
-%     C44_matrix = Coeffs_cell{i,3};
-%     is_posdef(i) = check_g_vals_all_element_cubic(C11_matrix, C12_matrix, C44_matrix);
-% end
-%%
-% for i=1:num_coeffs
-% perf(find(ind_full_val==0),:)
-% end
 for i=1:num_coeffs
     ind_full = index_out_coeffs{i};
     ind_full_val = find(ind_full==0);
@@ -83,18 +76,6 @@ for i=1:num_coeffs
         Coeffs_mod(i,j,:) = Coeffs_cell{sortNchoose(j,i),i};
     end
 end
-
-
-
-% combs = nchoosek(N_choose, k_choose);
-% CombEle = combnk((1:N_choose), k_choose);
-% Coeffs_ensem = zeros(num_coeffs,combs, sz_nt); % here 5 is random number so that we can initialize the array
-% 
-% for num = 1:1:combs
-%     for k = 1:1:num_coeffs
-%         Coeffs_ensem(k,num,:) = mean(Coeffs_mod(k,CombEle(num,:),:),2);
-%     end
-% end
 
 Coeffs_ensem = Coeffs_mod;
 combs = size_consider;
@@ -142,8 +123,6 @@ for ns = 1:1:sz_put
     indG = find(G(:,ns)<=0);
     indB = find(B(:,ns)<=0);
     gamma = 0.556;
-    %ind_new = union(indG,indB);
-    %ind_new = setdiff((1:692),ind_new);
     ind_new = (1:sz_nt);
     nu(:,ns) = (3.*B(:,ns) - 2.*G(:,ns))./(6.*B(:,ns) + 2.*G(:,ns));
     
@@ -152,9 +131,7 @@ for ns = 1:1:sz_put
     chitau = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) (2.*Ge.*Gs.*(VM + VMc).*(2 -3.*nus + nue.*(-3 + 4.*nus)).*k)./(z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
     
     for i = 1:1:sz_nt
-        %chi(i) = chipres(VM,vol_new(i)*VM,1,G(ind_new(i)),Ge,nue,mu(i),10^8)+...
-        %    chitau(VM,vol_new(i)*VM,1,G(ind_new(i)),Ge,nue,mu(i),10^8, gamma);
-        chi(i) = chipres(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8)+...
+         chi(i) = chipres(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8)+...
             chitau(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8, gamma);
     end
     chi_new(:,ns) = chi./10^12;

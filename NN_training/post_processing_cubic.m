@@ -5,7 +5,7 @@ clear all
 lattice = strtrim(fileread('lattice-type.txt'));
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')));
 mps_nt = mps;
-load(strcat(lattice,'_final_results.mat'));
+load(strcat(lattice,'_final_results2.mat'));
 load(fullfile('..','data-gen',strcat(lattice,'-data.mat')));
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) ;
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) ;

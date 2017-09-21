@@ -4,6 +4,7 @@ clear all
 %% Here you should put the predicted valued file with non_training data.
 lattice = fileread('lattice-type.txt');
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')));
+mps_nt = mps;
 load(strcat(lattice,'_final_results.mat'));
 load(fullfile('..','data-gen',strcat(lattice,'-data.mat')));
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) ;
@@ -14,6 +15,7 @@ num_samples = 1000;
 X_mat = xdata;
 coeffs = ydata;
 cubic_nt = xntdata;
+%cubic_nt = xdata;
 %cubic_nt = cubic_nt';
 
 %%
@@ -47,104 +49,169 @@ for coeff_num = 1:1:num_coeffs
         Coeffs_mat = net(non_training);
         Coeffs_mat = mapminmax('reverse',Coeffs_mat,t_recover);
         Coeffs_cell{num_samp,coeff_num} = Coeffs_mat;
+        ncoeffs(coeff_num, num_samp, :) = Coeffs_mat;
     end
 end
 %%
-N_choose = 18;
+N_choose = 20;
 k_choose = 9;
-size_consider = N_choose; % Lowest N_choose test errrors were taken
-
+minbest = N_choose; % Lowest N_choose test errrors were taken
 
 ngoodnets = zeros(1,num_coeffs);
 for i=1:num_coeffs
     ngoodnets(i) = length(find(index_out_coeffs{i}==0)) ;
 end
 
-size_consider = min(ngoodnets);
+minbest = min(ngoodnets);
 sz_nt = size(cubic_nt,1);
-test_err = zeros(num_samples,num_coeffs);
-sortNchoose = zeros(size_consider,num_coeffs);
-Coeffs_mod = zeros(num_coeffs,size_consider,sz_nt);
+sortNchoose = zeros(minbest,num_coeffs);
+Coeffs_mod = zeros(num_coeffs,minbest,sz_nt);
 
 for i=1:num_coeffs
-    ind_full = index_out_coeffs{i};
-    ind_full_val = find(ind_full==0);
+    ind_full_val = find(index_out_coeffs{i}==0);
     perf_full = perf(ind_full_val,i);
-    [val, sorte] = sort(perf_full);
-    sortNchoose(:,i) = ind_full_val(sorte(1:size_consider));
-    for j = 1:1:size_consider
+    [val, sortind] = sort(perf_full);
+    sortNchoose(:,i) = ind_full_val(sortind(1:minbest));
+    for j = 1:1:minbest
         Coeffs_mod(i,j,:) = Coeffs_cell{sortNchoose(j,i),i};
     end
 end
 
 Coeffs_ensem = Coeffs_mod;
-combs = size_consider;
+combs = 10000; %N_choose^num_coeffs;
 sz_put = combs;
-cubic_mat = zeros(6,6,sz_nt);
-G_v = zeros(sz_nt,1);
-G_r = zeros(sz_nt,1);
-B_v = zeros(sz_nt,1);
-B_r = zeros(sz_nt,1);
+cubic_mat = zeros(6,6,sz_nt,combs);
+G_v = zeros(sz_nt,sz_put);
+G_r = zeros(sz_nt,sz_put);
+B_v = zeros(sz_nt,sz_put);
+B_r = zeros(sz_nt,sz_put);
 nu = zeros(sz_nt,sz_put);
-G = zeros(sz_nt, sz_put);
-B = zeros(sz_nt, sz_put);
+G = zeros(sz_nt,sz_put);
+B = zeros(sz_nt,sz_put);
 
 nue = 0.42;
 VM = 1.3e-05;
 Ge = 3.4e09;
 
 chi_new = zeros(sz_nt,sz_put);
-is_posdef = zeros(num_samples,1);
+is_posdef = zeros(sz_nt, sz_put);
+chipres = @(VM,VMc,z,Gs,Ge,nue,nus,k) (VM-VMc).*(Gs.^2.*(3-4.*nue)+Ge.^2.*(-3+4.*nus)).*k./(2.*z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
+chitau = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) (2.*Ge.*Gs.*(VM + VMc).*(2 -3.*nus + nue.*(-3 + 4.*nus)).*k)./(z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
 
-for ns = 1:1:sz_put
-    for i = 1:1:sz_nt
-        Cmat = constructC(lattice, Coeffs_ensem(:,ns,i));
+model_choice = zeros(num_coeffs, combs);
+for i=1:num_coeffs
+    ll = 1;
+    ul = ngoodnets(i);
+    %r = randi([1,ngoodnets(i)],1,combs);
+    model_choice(i,:) = randi([1,ngoodnets(i)],1,combs);
+end
+
+
+% for i=1:combs
+%     coeffs_model = [];
+%     for j=1:num_coeffs
+%         %sample_choice(i) = [sample_choice(i), model_choice(j,i)];
+%         coeffs_model = [coeffs_model, Coeffs_cell{model_choice(j,i),j}(mat)];
+%     end
+%     Cmat = constructC(lattice, coeffs_model)
+% end
+% end
+
+coeffs_model = zeros(1,num_coeffs);
+
+for mat=1:sz_nt
+    for i=1:combs
+        coeffs_model = [];
+        for j=1:num_coeffs
+            %sample_choice(i) = [sample_choice(i), model_choice(j,i)];
+            coeffs_model = [coeffs_model, Coeffs_cell{model_choice(j,i),j}(mat)];
+        end
+        Cmat = constructC(lattice, coeffs_model);
         [~,p] = chol(Cmat);
-        cubic_mat(:,:,i) = Cmat; % purely for storage
-        if (det(cubic_mat(:,:,i))~=0)
-            [~, p] = chol(cubic_mat(:,:,i));
+        if (det(Cmat)~=0)
+            [~, p] = chol(Cmat);
             if(p==0)
-                is_posdef(i) = 1;
+                is_posdef(mat,i) = 1;
             end
             Smat = inv(Cmat);
-            G_v(i) = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+3*(Cmat(4,4)+Cmat(5,5)+Cmat(6,6))-Cmat(1,2)-Cmat(2,3)-Cmat(3,1))/15;
-            B_v(i) = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+2*(Cmat(1,2)+Cmat(2,3)+Cmat(3,1)))/9;
-            B_r(i) = 1/(Smat(1,1)+Smat(2,2)+Smat(3,3)+2*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
-            G_r(i) = 15/(4*(Smat(1,1)+Smat(2,2)+Smat(3,3))+3*(Smat(4,4)+Smat(5,5)+Smat(6,6))-4*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+            G_v = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+3*(Cmat(4,4)+Cmat(5,5)+Cmat(6,6))-Cmat(1,2)-Cmat(2,3)-Cmat(3,1))/15;
+            B_v = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+2*(Cmat(1,2)+Cmat(2,3)+Cmat(3,1)))/9;
+            B_r = 1/(Smat(1,1)+Smat(2,2)+Smat(3,3)+2*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+            G_r = 15/(4*(Smat(1,1)+Smat(2,2)+Smat(3,3))+3*(Smat(4,4)+Smat(5,5)+Smat(6,6))-4*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
         else
-            G_v(i) = 0;
-            G_r(i) = 0;
-            B_v(i) = 0;
-            B_r(i) = 0;
+            G_v = 0;
+            G_r = 0;
+            B_v = 0;
+            B_r = 0;
         end
+        B(mat,i) = 0.5*(B_v+B_r)*10^9;
+        G(mat,i) = 0.5*(G_v+G_r)*10^9;
+        %indG = find(G(:,ns)<=0);
+        %indB = find(B(:,ns)<=0);
+        gamma = 0.556;
+        ind_new = (1:sz_nt);
+        nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
+        vol_new = volrat(ind_new);
+        
+        %for i = 1:1:sz_nt
+        chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,nu(mat,i),10^8)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,nu(mat,i),10^8, gamma);
+        %end
+        chi_new(mat,i) = chi./10^12;
     end
-    B(:,ns) = 0.5*(B_v+B_r)*10^9;
-    G(:,ns) = 0.5*(G_v+G_r)*10^9;
-    indG = find(G(:,ns)<=0);
-    indB = find(B(:,ns)<=0);
-    gamma = 0.556;
-    ind_new = (1:sz_nt);
-    nu(:,ns) = (3.*B(:,ns) - 2.*G(:,ns))./(6.*B(:,ns) + 2.*G(:,ns));
-    
-    vol_new = volrat(ind_new);
-    chipres = @(VM,VMc,z,Gs,Ge,nue,nus,k) (VM-VMc).*(Gs.^2.*(3-4.*nue)+Ge.^2.*(-3+4.*nus)).*k./(2.*z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
-    chitau = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) (2.*Ge.*Gs.*(VM + VMc).*(2 -3.*nus + nue.*(-3 + 4.*nus)).*k)./(z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
-    
-    for i = 1:1:sz_nt
-         chi(i) = chipres(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8)+...
-            chitau(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8, gamma);
-    end
-    chi_new(:,ns) = chi./10^12;
 end
+
+for mat=1:sz_nt
+    ind_pos = find(is_posdef(mat,:)==1);
+%     if(~isempty(ind_pos))
+%         mat
+%     end
+    Gnew{mat} = G(mat,ind_pos);
+end
+
+
+% for ns = 1:sz_put
+%     for i = 1:1:sz_nt
+%         Cmat = constructC(lattice, Coeffs_ensem(:,ns,i));
+%         [~,p] = chol(Cmat);
+%         cubic_mat(:,:,i) = Cmat; % purely for storage
+%         if (det(cubic_mat(:,:,i))~=0)
+%             [~, p] = chol(cubic_mat(:,:,i));
+%             if(p==0)
+%                 is_posdef(i) = 1;
+%             end
+%             Smat = inv(Cmat);
+%             G_v(i) = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+3*(Cmat(4,4)+Cmat(5,5)+Cmat(6,6))-Cmat(1,2)-Cmat(2,3)-Cmat(3,1))/15;
+%             B_v(i) = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+2*(Cmat(1,2)+Cmat(2,3)+Cmat(3,1)))/9;
+%             B_r(i) = 1/(Smat(1,1)+Smat(2,2)+Smat(3,3)+2*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+%             G_r(i) = 15/(4*(Smat(1,1)+Smat(2,2)+Smat(3,3))+3*(Smat(4,4)+Smat(5,5)+Smat(6,6))-4*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+%         else
+%             G_v(i) = 0;
+%             G_r(i) = 0;
+%             B_v(i) = 0;
+%             B_r(i) = 0;
+%         end
+%     end
+%     B(:,ns) = 0.5*(B_v+B_r)*10^9;
+%     G(:,ns) = 0.5*(G_v+G_r)*10^9;
+%     indG = find(G(:,ns)<=0);
+%     indB = find(B(:,ns)<=0);
+%     gamma = 0.556;
+%     ind_new = (1:sz_nt);
+%     nu(:,ns) = (3.*B(:,ns) - 2.*G(:,ns))./(6.*B(:,ns) + 2.*G(:,ns));
+%     vol_new = volrat(ind_new);
+%
+%     for i = 1:1:sz_nt
+%         chi(i) = chipres(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8)+chitau(VM,vol_new(i)*VM,1,G(i,ns),Ge,nue,nu(i,ns),10^8, gamma);
+%     end
+%     chi_new(:,ns) = chi./10^12;
+% end
 %% Creating normal distribution
 prob_stable = zeros(1,sz_nt);
 mean_vals = zeros(1,sz_nt);
 std_vals = zeros(1,sz_nt);
-for i = 1:1:sz_nt
+for i = 1:sz_nt
     [abc, def] = sort(abs(chi_new(i,:)),'descend');
-    numb = floor(0.1*combs);
-    chill = chi_new(i,def(numb:end));
-    neg = max(size(find(chill<0)));
-    tot = max(size(chill));
+    neg = size(find(chi_new(i,ind_pos)<0),2);
+    tot = size(chi_new(i,ind_pos),2);
     prob_stable(i) = neg/tot; % Computes cdf less at zero which is the boundary of stability
 end

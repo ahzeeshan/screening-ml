@@ -60,7 +60,7 @@ for coeff_num = 1:1:num_coeffs
     %XTEST = XTEST';
     
     val_perf_reqd=0.005;
-    tr_perf_reqd = 0.001;
+    tr_perf_reqd = 0.01;
     reg_tr_reqd=0.85;
     max_index = 1000;
     ind_out = zeros(sample_test, 1);
@@ -68,8 +68,8 @@ for coeff_num = 1:1:num_coeffs
     tr_storage = cell(sample_test,1);
     
     parfor random_weights = 1:1:sample_test
-      random_weights  
-      val_min = 1;
+        random_weights
+        val_min = 1;
         tr_perf_min = 1;
         net_min = [];
         bool_var = 1;
@@ -82,14 +82,13 @@ for coeff_num = 1:1:num_coeffs
         net.divideParam.trainRatio = 80/100;
         net.divideParam.valRatio = 20/100;
         net.divideParam.testRatio = 0/100;
-%        net.performParam.regularization = 0.01;
+        %        net.performParam.regularization = 0.01;
         net.trainParam.max_fail = 15;
         
         while((bool_var))
             init(net);
-
-[net,tr] = train(net,XTRAIN,ytrain);
-out_train = net(XTRAIN);
+            [net,tr] = train(net,XTRAIN,ytrain);
+            out_train = net(XTRAIN);
             trTarg = ytrain(tr.trainInd);
             trOut = out_train(tr.trainInd);
             [reg_tr,~,~] = regression(trTarg, trOut);
@@ -97,7 +96,7 @@ out_train = net(XTRAIN);
             %[reg_test,~,~] = regression(testTarg, testOut)
             val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
             tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
-            bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % (tr_perf>tr_perf_reqd) Training parameter
+            bool_var = (val_perf>val_perf_reqd)||(tr_perf>tr_perf_reqd) %(reg_tr<reg_tr_reqd); % (tr_perf>tr_perf_reqd) Training parameter
             
             if val_perf<val_min %&& tr_perf<tr_perf_min
                 val_min = val_perf;

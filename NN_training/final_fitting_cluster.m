@@ -20,7 +20,7 @@ load(fullfile('..','Linear',strcat('features_',lattice,'.mat')))
 
 %% User input data
 X_mat = xdata(1:end-floor(0.1*size(xdata,1)),:);
-coeffs = ydata;
+coeffs = ydata(1:end-floor(0.1*size(xdata,1)),:);
 num_coeffs = size(coeffs,2);
 cubic_nt = xntdata;
 

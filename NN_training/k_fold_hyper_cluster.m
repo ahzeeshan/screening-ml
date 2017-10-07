@@ -28,6 +28,7 @@ sample_test = 20;
 max_index = 1000;
 val_perf_reqd = 0.01;
 reg_tr_reqd = 0.85;
+tr_perf_reqd = 0.01;
 for coeff_num = 1:1:num_coeffs % for all the coefficients
     %% Loading the data and normalising it to [-1 ,1]
     coeff_num
@@ -55,7 +56,7 @@ for coeff_num = 1:1:num_coeffs % for all the coefficients
         % running iterations for hidden layer size
         parfor layer_size = hidden_layer_size_range
             layer_size
-            fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
+            fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, tr_perf_reqd);
             mse_size(coeff_num, random_kfold, layer_size) = crossval('mse',x',t','Predfun',fun,'kfold',k);
         end
         [err,ind_err] = min(mse_size(coeff_num,random_kfold,:));

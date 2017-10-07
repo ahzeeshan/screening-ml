@@ -12,7 +12,7 @@ saveProfile(mycluster)
 lattice = strtrim(fileread('lattice-type.txt'));
 disp(lattice)
 load(fullfile('..','data-gen',strcat(lattice,'-data.mat'))) % xdata and ydata
-load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) 
+load(fullfile('..','Linear',strcat('features_',lattice,'.mat')))
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')))
 X_mat = xdata(1:end-floor(0.1*size(xdata,1)),:);
 
@@ -50,16 +50,25 @@ for coeff_num = 1:1:num_coeffs % for all the coefficients
     
     k = 5;
     
-    for random_kfold=1:num_kfolds
-        random_kfold
-        % running iterations for hidden layer size
-        parfor layer_size = hidden_layer_size_range
-            layer_size
-            fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
-            mse_size(coeff_num, random_kfold, layer_size) = crossval('mse',x',t','Predfun',fun,'kfold',k);
+    max_neuron = size(X_mat,1)/(2*length(feature_list{coeff_num}));
+    
+    if floor(max_neuron)==1
+        for random_kfold=1:num_kfolds
+            hidden_layer_min(coeff_num,random_kfold) = 1;
         end
-        [err,ind_err] = min(mse_size(coeff_num,random_kfold,:));
-        hidden_layer_min(coeff_num,random_kfold) = ind_err;
+    else
+        hidden_layer_size_range = 1:max_neuron;
+        for random_kfold=1:num_kfolds
+            random_kfold
+            % running iterations for hidden layer size
+            parfor layer_size = hidden_layer_size_range
+                layer_size
+                fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
+                mse_size(coeff_num, random_kfold, layer_size) = crossval('mse',x',t','Predfun',fun,'kfold',k);
+            end
+            [err,ind_err] = min(mse_size(coeff_num,random_kfold,:));
+            hidden_layer_min(coeff_num,random_kfold) = ind_err;
+        end
     end
 end
 

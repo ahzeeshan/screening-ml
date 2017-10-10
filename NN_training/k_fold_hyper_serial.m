@@ -59,6 +59,7 @@ for coeff_num = 1:1:num_coeffs % for all the coefficients
     if floor(max_neuron(coeff_num))==1
         for random_kfold=1:num_kfolds
             hidden_layer_min(coeff_num,random_kfold) = 1;
+            mse_size{coeff_num}(random_kfold,:) = -1;
         end
     else
         %mse_temp_val = zeros(1,mmax);

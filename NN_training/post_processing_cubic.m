@@ -57,6 +57,8 @@ for i=1:num_coeffs
     ngoodnets(i) = length(find(index_out_coeffs{i}==0)) ;
 end
 
+ngoodnets
+
 %minbest = min(ngoodnets);
 
 %sortNchoose = zeros(minbest,num_coeffs);

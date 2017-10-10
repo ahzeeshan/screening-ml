@@ -69,13 +69,13 @@ end
 %     %sortNchoose(:,i) = ind_full_val(sortind(1:minbest));
 % end
 
-combs = 1000;
+combs = 10000;
 %cubic_mat = zeros(6,6,sz_nt,combs); -- not storing right now
 G_v = zeros(sz_nt,combs);
 G_r = zeros(sz_nt,combs);
 B_v = zeros(sz_nt,combs);
 B_r = zeros(sz_nt,combs);
-nu = zeros(sz_nt,combs);
+Nu = zeros(sz_nt,combs);
 G = zeros(sz_nt,combs);
 B = zeros(sz_nt,combs);
 
@@ -99,6 +99,7 @@ end
 
 %%
 Gnew = cell(1,sz_nt);
+Nunew = cell(1,sz_nt);
 ind_posdefn = cell(1,sz_nt);
 for mat=1:sz_nt
     mat
@@ -128,23 +129,39 @@ for mat=1:sz_nt
         B(mat,i) = 0.5*(B_v+B_r)*10^9;
         G(mat,i) = 0.5*(G_v+G_r)*10^9;  
         ind_new = (1:sz_nt);
-        nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
+        Nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
         vol_new = volrat(ind_new);
-        chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,nu(mat,i),10^8)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,nu(mat,i),10^8, gamma);
+        chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),10^8)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),10^8, gamma);
         chi_new(mat,i) = chi./10^12;
     end
     ind_posdefn{mat} = find(is_posdef(mat,:)==1);
     Gnew{mat} = G(mat,ind_posdefn{mat});
+    Nunew{mat} = Nu(mat,ind_posdefn{mat});
 end
 
 %% Creating normal distribution
 prob_stable = zeros(1,sz_nt);
 meanG = zeros(1,sz_nt);
 stdG = zeros(1,sz_nt);
+meanNu = zeros(1,sz_nt);
+stdNu = zeros(1,sz_nt);
 for mat = 1:sz_nt
     neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
     tot = size(chi_new(mat,ind_posdefn{mat}),2);
     prob_stable(mat) = neg/tot; 
     meanG(mat) = mean(Gnew{mat});
     stdG(mat) = std(Gnew{mat});
+    meanNu(mat) = mean(Nunew{mat});
+    stdNu(mat) = std(Nunew{mat});
 end
+
+%%
+histogram(meanG/10^9,'NumBins',25)
+ax1=gca;
+set(ax1,'Box','on')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'\textbf{Shear modulus/GPa}','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
+ylabel(ax1,'# of materials','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%xlim([120,200])
+

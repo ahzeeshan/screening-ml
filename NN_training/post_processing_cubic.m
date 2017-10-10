@@ -57,6 +57,8 @@ for i=1:num_coeffs
     ngoodnets(i) = length(find(index_out_coeffs{i}==0)) ;
 end
 
+ngoodnets
+
 %minbest = min(ngoodnets);
 
 %sortNchoose = zeros(minbest,num_coeffs);
@@ -164,4 +166,5 @@ xlabel(ax1,'\textbf{Shear modulus/GPa}','Interpreter','latex','FontWeight','bold
 ylabel(ax1,'# of materials','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 %xlim([120,200])
+
 

@@ -22,7 +22,9 @@ num_coeffs = size(coeffs,2);
 cubic_nt = xntdata; % 626 by 18
 hidden_layer_size_range = (1:10);
 num_kfolds = 5;
-mse_size = zeros(num_coeffs, num_kfolds, length(hidden_layer_size_range));
+mse_size = cell(1,num_coeffs);
+max_neuron = zeros(1,num_coeffs);
+%mse_size = zeros(num_coeffs, num_kfolds, length(hidden_layer_size_range));
 hidden_layer_min = zeros(num_coeffs,num_kfolds);
 sample_test = 20;
 max_index = 1000;
@@ -51,33 +53,46 @@ for coeff_num = 1:1:num_coeffs % for all the coefficients
     
     k = 5;
     
-    max_neuron = size(X_mat,1)/(2*length(feature_list{coeff_num}));
+    max_neuron(coeff_num) = floor(size(X_mat,1)/(2*length(feature_list{coeff_num})));
+    mmax = max_neuron(coeff_num);
     
-    if floor(max_neuron)==1
+    if floor(max_neuron(coeff_num))==1
         for random_kfold=1:num_kfolds
             hidden_layer_min(coeff_num,random_kfold) = 1;
         end
     else
-        hidden_layer_size_range = 1:max_neuron;
+        %mse_temp_val = zeros(1,mmax);
+        %hidden_layer_size_range = 1:max_neuron;
         for random_kfold=1:num_kfolds
             random_kfold
             % running iterations for hidden layer size
-            for layer_size = hidden_layer_size_range
+            mse_temp_val = zeros(1,mmax);
+            for layer_size = 1:mmax
                 layer_size
-                fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, tr_perf_reqd);
-                mse_size(coeff_num, random_kfold, layer_size) = crossval('mse',x',t','Predfun',fun,'kfold',k);
+                fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
+                mse_temp_val(layer_size)  = crossval('mse',x',t','Predfun',fun,'kfold',k);
             end
-            [err,ind_err] = min(mse_size(coeff_num,random_kfold,:));
+            mse_size{coeff_num}(random_kfold,:) = mse_temp_val;
+            [err,ind_err] = min(mse_temp_val);
             hidden_layer_min(coeff_num,random_kfold) = ind_err;
         end
     end
 end
+mse_fold_av = cell(1,num_coeffs);
+hidden_layer_av = zeros(1,num_coeffs);
+for coeff_num=1:num_coeffs
+    for layer_size=1:max_neuron(coeff_num)
+        mse_fold_av{coeff_num}(layer_size) = mean(mse_size{coeff_num}(:,layer_size));
+    end
+    [mse_min_av,ind_min_av] = min(mse_fold_av{coeff_num});
+    hidden_layer_av(coeff_num) = ind_min_av;
+end
 
-mse_fold_av = mean(mse_size,2);
-mse_fold_av = reshape(mse_fold_av, [num_coeffs, length(hidden_layer_size_range)]);
+%mse_fold_av = mean(mse_size,2);
+%mse_fold_av = reshape(mse_fold_av, [num_coeffs, length(hidden_layer_size_range)]);
 
-[mse_min,ind_min_av] = min(mse_fold_av,[],2);
-hidden_layer_av = ind_min_av;
+%[mse_min,ind_min_av] = min(mse_fold_av,[],2);
+%hidden_layer_av = ind_min_av;
 
 save(strcat(lattice,'_results.mat'),'mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
 toc;

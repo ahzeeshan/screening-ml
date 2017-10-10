@@ -6,10 +6,10 @@ clear all
 tic;
 
 mycluster = parcluster('local')
-%mycluster.JobStorageLocation = strcat('/home/azeeshan/.matlab','/', getenv('SLURM_JOB_ID'))
-%parpool(mycluster, str2num(getenv('SLURM_CPUS_ON_NODE')))
-mycluster.NumWorkers = 24
-parpool(mycluster)
+mycluster.JobStorageLocation = strcat(getenv('SCRATCH'),'/.matlab/', getenv('SLURM_JOB_ID'))
+mycluster.NumWorkers = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'))
+parpool(mycluster, mycluster.NumWorkers)
+%parpool(mycluster, mycluster.NumWorkers)
 saveProfile(mycluster)
 
 lattice = fileread('lattice-type.txt');
@@ -63,8 +63,8 @@ for coeff_num = 1:1:num_coeffs
     val_perf_reqd=0.01;
     tr_perf_reqd = 0.01;
     reg_tr_reqd=0.9;
-Rsq_val_reqd = 0.8;
-Rsq_tr_reqd = 0.9; 
+Rsq_val_reqd = 0.65;
+Rsq_tr_reqd = 0.8; 
     max_index = 1000;
     ind_out = zeros(sample_test, 1);
     net_storage = cell(sample_test,1);

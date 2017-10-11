@@ -126,5 +126,12 @@ tr_storage_complete{coeff_num} = tr_storage;
 index_out_coeffs{coeff_num} = ind_out;
 %test_err_complete{coeff_num} = test_err;
 end
+
+ngoodnets = zeros(1,num_coeffs);
+for i=1:num_coeffs
+    ngoodnets(i) = length(find(index_out_coeffs{i}==0)) ;
+end
+ngoodnets
+
 toc;
 save(strcat(lattice,'_final_results.mat'),'net_storage_complete','index_out_coeffs','tr_storage_complete')

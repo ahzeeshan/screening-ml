@@ -94,9 +94,10 @@ chitau = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) (2.*Ge.*Gs.*(VM + VMc).*(2 -3.*nus + 
 
 model_choice = zeros(num_coeffs, combs);
 for i=1:num_coeffs
-    ll = 1;
-    ul = ngoodnets(i);
-    model_choice(i,:) = randi([1,ngoodnets(i)],1,combs);
+    %ll = 1;
+    %ul = ngoodnets(i);
+    %model_choice(i,:) = randi([1,ngoodnets(i)],1,combs);
+    model_choice(i,:) = datasample(find(index_out_coeffs{i}==0),combs);
 end
 
 %%
@@ -129,7 +130,7 @@ for mat=1:sz_nt
             B_r = 0;
         end
         B(mat,i) = 0.5*(B_v+B_r)*10^9;
-        G(mat,i) = 0.5*(G_v+G_r)*10^9;  
+        G(mat,i) = 0.5*(G_v+G_r)*10^9;
         ind_new = (1:sz_nt);
         Nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
         vol_new = volrat(ind_new);
@@ -147,10 +148,10 @@ meanG = zeros(1,sz_nt);
 stdG = zeros(1,sz_nt);
 meanNu = zeros(1,sz_nt);
 stdNu = zeros(1,sz_nt);
-for mat = 1:sz_nt
+parfor mat = 1:sz_nt
     neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
     tot = size(chi_new(mat,ind_posdefn{mat}),2);
-    prob_stable(mat) = neg/tot; 
+    prob_stable(mat) = neg/tot;
     meanG(mat) = mean(Gnew{mat});
     stdG(mat) = std(Gnew{mat});
     meanNu(mat) = mean(Nunew{mat});

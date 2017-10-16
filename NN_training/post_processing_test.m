@@ -72,7 +72,7 @@ sortedtestperf = cell(1,num_coeffs);
 sortind = cell(1, num_coeffs);
 for i=1:num_coeffs
     ngoodnets(i) = length(find(index_out_coeffs{i}==0));
-    ngoodnets(i) = length(find(test_perf(i,:)>0.1));
+    ngoodnets(i) = length(find(test_perf(i,:)>0.0));
     [sortedtestperf{i},sortind{i}] = sort(test_perf(i,:),'descend');
 end
 
@@ -176,16 +176,16 @@ for mat = 1:sz_nt
     meanNu(mat) = mean(Nunew{mat});
     stdNu(mat) = std(Nunew{mat});
 end
-save(strcat(lattice,'_final_results.mat'), 'meanG', 'prob_stable', 'stdG', 'ngoodnets');
+save(strcat(lattice,'_post_results.mat'), 'meanG', 'prob_stable', 'stdG', 'ngoodnets');
 
 % %%
-% histogram(meanG/10^9,'NumBins',25)
-% ax1=gca;
-% set(ax1,'Box','on')
-% set(gcf,'Color','w','Position', [0, 0, 600, 500])
-% xlabel(ax1,'\textbf{Shear modulus/GPa}','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
-% ylabel(ax1,'# of materials','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
-% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-% %xlim([120,200])
+histogram(meanG/10^9,'NumBins',25)
+ax1=gca;
+set(ax1,'Box','on')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'\textbf{Shear modulus/GPa}','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
+ylabel(ax1,'# of materials','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%xlim([120,200])
 % 
 

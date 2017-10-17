@@ -123,6 +123,7 @@ end
 Gnew = cell(1,sz_nt);
 Nunew = cell(1,sz_nt);
 ind_posdefn = cell(1,sz_nt);
+Cmatrix = zeros(sz_nt,combs,6,6);
 for mat=1:sz_nt
     mat
     for i=1:combs
@@ -148,6 +149,7 @@ for mat=1:sz_nt
             B_v = 0;
             B_r = 0;
         end
+        Cmatrix(mat,combs,:,:) = Cmat;
         B(mat,i) = 0.5*(B_v+B_r)*10^9;
         G(mat,i) = 0.5*(G_v+G_r)*10^9;
         ind_new = (1:sz_nt);
@@ -167,6 +169,7 @@ meanG = zeros(1,sz_nt);
 stdG = zeros(1,sz_nt);
 meanNu = zeros(1,sz_nt);
 stdNu = zeros(1,sz_nt);
+chimean = zeros(1,sz_nt);
 for mat = 1:sz_nt
     neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
     tot = size(chi_new(mat,ind_posdefn{mat}),2);
@@ -175,8 +178,9 @@ for mat = 1:sz_nt
     stdG(mat) = std(Gnew{mat});
     meanNu(mat) = mean(Nunew{mat});
     stdNu(mat) = std(Nunew{mat});
+    chimean(mat) = mean(chi_new(mat,ind_posdefn{mat}));
 end
-save(strcat(lattice,'_post_results.mat'), 'meanG', 'prob_stable', 'stdG', 'ngoodnets');
+save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrix');
 
 % %%
 histogram(meanG/10^9,'NumBins',25)

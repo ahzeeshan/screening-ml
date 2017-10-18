@@ -181,7 +181,7 @@ for mat = 1:sz_nt
     stdNu(mat) = std(Nunew{mat});
     chimean(mat) = mean(chi_new(mat,ind_posdefn{mat}));
 end
-save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrix');
+save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrix','-v7.3');
 
 % %%
 histogram(meanG/10^9,'NumBins',25)

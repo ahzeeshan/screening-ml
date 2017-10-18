@@ -123,7 +123,7 @@ end
 Gnew = cell(1,sz_nt);
 Nunew = cell(1,sz_nt);
 ind_posdefn = cell(1,sz_nt);
-Cmatrix = zeros(sz_nt,combs,6,6);
+Cmatrix = cell(sz_nt,combs);
 for mat=1:sz_nt
     mat
     for i=1:combs
@@ -132,6 +132,7 @@ for mat=1:sz_nt
             coeffs_model = [coeffs_model, predcoeffs(mat, j, model_choice(j,i))];
         end
         Cmat = constructC(lattice, coeffs_model);
+        Cmatrix{mat,i} = Cmat;
         [~,p] = chol(Cmat);
         if (det(Cmat)~=0)
             [~, p] = chol(Cmat);
@@ -149,7 +150,7 @@ for mat=1:sz_nt
             B_v = 0;
             B_r = 0;
         end
-        Cmatrix(mat,combs,:,:) = Cmat;
+        
         B(mat,i) = 0.5*(B_v+B_r)*10^9;
         G(mat,i) = 0.5*(G_v+G_r)*10^9;
         ind_new = (1:sz_nt);

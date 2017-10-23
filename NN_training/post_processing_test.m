@@ -171,6 +171,8 @@ stdG = zeros(1,sz_nt);
 meanNu = zeros(1,sz_nt);
 stdNu = zeros(1,sz_nt);
 chimean = zeros(1,sz_nt);
+Cmatrixmean = zeros(sz_nt,6,6);
+Cmatrixstd = zeros(sz_nt,6,6);
 for mat = 1:sz_nt
     neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
     tot = size(chi_new(mat,ind_posdefn{mat}),2);
@@ -180,8 +182,11 @@ for mat = 1:sz_nt
     meanNu(mat) = mean(Nunew{mat});
     stdNu(mat) = std(Nunew{mat});
     chimean(mat) = mean(chi_new(mat,ind_posdefn{mat}));
+    D = cat(3,Cmatrix{mat,ind_posdefn{mat}});
+    Cmatrixmean(mat,:,:) = mean(D,3);
+    Cmatrixstd(mat,:,:) = std(D,[],3);
 end
-save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrix','-v7.3');
+save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','-v7.3');
 
 % %%
 histogram(meanG/10^9,'NumBins',25)

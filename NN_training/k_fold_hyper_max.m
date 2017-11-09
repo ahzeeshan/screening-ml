@@ -69,7 +69,7 @@ max_neuron(coeff_num) = floor( (size(X_mat,1)-1)/(length(feature_list{coeff_num}
             random_kfold
             % running iterations for hidden layer size
             mse_temp_val = zeros(1,mmax);
-            for layer_size = 1:mmax
+            parfor layer_size = 1:mmax
                 layer_size
                 fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
                 mse_temp_val(layer_size)  = crossval('mse',x',t','Predfun',fun,'kfold',k);

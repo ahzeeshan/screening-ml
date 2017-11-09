@@ -123,6 +123,7 @@ end
 Gnew = cell(1,sz_nt);
 Nunew = cell(1,sz_nt);
 ind_posdefn = cell(1,sz_nt);
+Cmatrix = cell(sz_nt,combs);
 for mat=1:sz_nt
     mat
     for i=1:combs
@@ -131,6 +132,7 @@ for mat=1:sz_nt
             coeffs_model = [coeffs_model, predcoeffs(mat, j, model_choice(j,i))];
         end
         Cmat = constructC(lattice, coeffs_model);
+        Cmatrix{mat,i} = Cmat;
         [~,p] = chol(Cmat);
         if (det(Cmat)~=0)
             [~, p] = chol(Cmat);
@@ -148,6 +150,7 @@ for mat=1:sz_nt
             B_v = 0;
             B_r = 0;
         end
+        
         B(mat,i) = 0.5*(B_v+B_r)*10^9;
         G(mat,i) = 0.5*(G_v+G_r)*10^9;
         ind_new = (1:sz_nt);
@@ -167,6 +170,9 @@ meanG = zeros(1,sz_nt);
 stdG = zeros(1,sz_nt);
 meanNu = zeros(1,sz_nt);
 stdNu = zeros(1,sz_nt);
+chimean = zeros(1,sz_nt);
+Cmatrixmean = zeros(sz_nt,6,6);
+Cmatrixstd = zeros(sz_nt,6,6);
 for mat = 1:sz_nt
     neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
     tot = size(chi_new(mat,ind_posdefn{mat}),2);
@@ -175,8 +181,12 @@ for mat = 1:sz_nt
     stdG(mat) = std(Gnew{mat});
     meanNu(mat) = mean(Nunew{mat});
     stdNu(mat) = std(Nunew{mat});
+    chimean(mat) = mean(chi_new(mat,ind_posdefn{mat}));
+    D = cat(3,Cmatrix{mat,ind_posdefn{mat}});
+    Cmatrixmean(mat,:,:) = mean(D,3);
+    Cmatrixstd(mat,:,:) = std(D,[],3);
 end
-save(strcat(lattice,'_post_results.mat'), 'meanG', 'prob_stable', 'stdG', 'ngoodnets');
+save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','-v7.3');
 
 % %%
 histogram(meanG/10^9,'NumBins',25)

@@ -4,10 +4,11 @@ clear all
 tic;
 
 mycluster = parcluster('local')
-mycluster.JobStorageLocation = strcat(getenv('SCRATCH'),'/.matlab/', getenv('SLURM_JOB_ID'))
-mycluster.NumWorkers = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'))
-parpool(mycluster, mycluster.NumWorkers)
-saveProfile(mycluster)
+  mycluster.JobStorageLocation = strcat(getenv('SCRATCH'),'/.matlab/', getenv('SLURM_JOB_ID'))
+  mycluster.NumWorkers = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'))
+  parpool(mycluster, mycluster.NumWorkers)
+  %parpool(mycluster, mycluster.NumWorkers)
+  saveProfile(mycluster)
 
 lattice = strtrim(fileread('lattice-type.txt'));
 disp(lattice)
@@ -53,7 +54,7 @@ for coeff_num = 1:1:num_coeffs % for all the coefficients
     
     k = 5;
     
-    max_neuron(coeff_num) = floor(size(X_mat,1)/(2*length(feature_list{coeff_num})));
+max_neuron(coeff_num) = floor( (size(X_mat,1)-1)/(length(feature_list{coeff_num})+2));
     mmax = max_neuron(coeff_num);
     
     if floor(max_neuron(coeff_num))==1
@@ -88,12 +89,12 @@ for coeff_num=1:num_coeffs
     [mse_min_av,ind_min_av] = min(mse_fold_av{coeff_num});
     hidden_layer_av(coeff_num) = ind_min_av;
 end
-
+max_neuron
 %mse_fold_av = mean(mse_size,2);
 %mse_fold_av = reshape(mse_fold_av, [num_coeffs, length(hidden_layer_size_range)]);
 
 %[mse_min,ind_min_av] = min(mse_fold_av,[],2);
 %hidden_layer_av = ind_min_av;
 
-save(strcat(lattice,'_results.mat'),'mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
+save(strcat(lattice,'_results.mat'),'max_neuron','mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
 toc;

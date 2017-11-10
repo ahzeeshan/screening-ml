@@ -71,7 +71,8 @@ max_neuron(coeff_num) = floor( (size(X_mat,1)-1)/(length(feature_list{coeff_num}
             mse_temp_val = zeros(1,mmax);
             for layer_size = 1:mmax
                 layer_size
-                fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
+	        fun = @(XTRAIN,ytrain,XTEST) neural_netp(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,Rsq_val_reqd,Rsq_tr_reqd);
+                %fun = @(XTRAIN,ytrain,XTEST) neural_net(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
                 mse_temp_val(layer_size)  = crossval('mse',x',t','Predfun',fun,'kfold',k);
             end
             mse_size{coeff_num}(random_kfold,:) = mse_temp_val;
@@ -96,5 +97,5 @@ max_neuron
 %[mse_min,ind_min_av] = min(mse_fold_av,[],2);
 %hidden_layer_av = ind_min_av;
 
-save(strcat(lattice,'_results.mat'),'max_neuron','mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
+save(strcat(lattice,'_resultsp.mat'),'max_neuron','mse_size','hidden_layer_min','mse_fold_av','hidden_layer_av');
 toc;

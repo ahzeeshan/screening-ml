@@ -1,4 +1,4 @@
-function [ yfit ] = neural_net(XTRAIN,ytrain,XTEST,layer_size, sample_test, max_index, Rsq_val_reqd, Rsq_tr_reqd)
+function [ yfit ] = neural_netp(XTRAIN,ytrain,XTEST,layer_size, sample_test, max_index, Rsq_val_reqd, Rsq_tr_reqd)
 % This function returns yfit of the XTEST corresponding to neural network
 % model
 trainFcn = 'trainlm';
@@ -8,7 +8,7 @@ XTEST = XTEST';
 val_min = 1;
 tr_perf_min = 1;
 net_min = [];
-parfor random_weights = 1:1:sample_test
+for random_weights = 1:1:sample_test
     net = fitnet(layer_size,trainFcn);
     net = configure(net,XTRAIN,ytrain);
     net.trainParam.showWindow = 0;
@@ -21,26 +21,23 @@ parfor random_weights = 1:1:sample_test
     %net_min = [];
     while((bool_var))
         init(net);
-        [net,tr] = train(net,XTRAIN,ytrain);
-        out_train = net(XTRAIN);
+        [net,tr] = train(net,XTRAIN,ytrain,'useParallel','yes');
+        out_train = net(XTRAIN,'useParallel','yes');
         %e = gsubtract(XTRAIN,ytrain);
         %performance = perform(net,ytrain,out_train);
-        %   if(size(ytrain) ~= size(out_train))
-        %    ytrain = ytrain';
-        %end
-        %trTarg = ytrain(tr.trainInd);
-        %trOut = out_train(tr.trainInd);
-        %[reg_tr,~,~] = regression(trTarg, trOut);
-        Rsq_tr = 1 - sum((ytrain(tr.trainInd)- ...
-                          out_train(tr.trainInd)).^2)/sum((ytrain(tr.trainInd) - mean(ytrain(tr.trainInd)) ).^2  );
-        Rsq_val = 1 - sum( (ytrain(tr.valInd) - out_train(tr.valInd)).^2 ...
-                           )/sum( (ytrain(tr.valInd) - ...
-                                   mean(ytrain(tr.valInd)) ).^2  );
+        if(size(ytrain) ~= size(out_train))
+            ytrain = ytrain';
+        end
+%        trTarg = ytrain(tr.trainInd);
+%        trOut = out_train(tr.trainInd);
+%        [reg_tr,~,~] = regression(trTarg, trOut);
         val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
         tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
-        %        bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
-        bool_var = (Rsq_val < Rsq_val_reqd) || (Rsq_tr < Rsq_tr_reqd);
-        if val_perf<val_min %&& tr_perf<tr_perf_min
+Rsq_tr = 1 - sum((ytrain(tr.trainInd)-out_train(tr.trainInd)).^2)/sum( (ytrain(tr.trainInd) - mean(ytrain(tr.trainInd)) ).^2  );
+Rsq_val = 1 - sum( (ytrain(tr.valInd) - out_train(tr.valInd)).^2 )/sum( (ytrain(tr.valInd) - mean(ytrain(tr.valInd)) ).^2  );
+%        bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % Training parameter
+bool_var = (Rsq_val < Rsq_val_reqd) || (Rsq_tr < Rsq_tr_reqd);
+        if val_perf < val_min %&& tr_perf<tr_perf_min
             val_min = val_perf; 
             tr_perf_min = tr_perf;
             net_min = net;
@@ -52,7 +49,7 @@ parfor random_weights = 1:1:sample_test
 %             x_val_min = XTRAIN(:,tr.valInd);
 %             x_test_min = XTRAIN(:,tr.testInd);
         end
-        if index_watch>=max_index % this is just for the case when the iterations do not converge even after 1000 runs ....
+        if index_watch >= max_index % this is just for the case when the iterations do not converge even after 1000 runs ....
 %             trOut = net_min(x_train_min);
 %             vOut = net_min(x_val_min);
 %             testOut = net_min(x_test_min);
@@ -77,7 +74,7 @@ parfor random_weights = 1:1:sample_test
 end
 %net_min
 %mse(net,ytrain(tr_min.trainInd),out_train(tr_min.trainInd))
-yfit = net_min(XTEST);
+yfit = net_min(XTEST,'useParallel','yes');
 yfit = yfit';
 end
 

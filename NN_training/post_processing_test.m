@@ -68,11 +68,16 @@ end
 
 %% generating model choices and good nets
 ngoodnets = zeros(1,num_coeffs);
+ngoodnets_tr = zeros(1,num_coeffs);
 sortedtestperf = cell(1,num_coeffs);
 sortind = cell(1, num_coeffs);
 for i=1:num_coeffs
-    ngoodnets(i) = length(find(index_out_coeffs{i}==0));
+    ngoodnets_tr(i) = length(find(index_out_coeffs{i}==0));
     ngoodnets(i) = length(find(test_perf(i,:)>0.0));
+    %if(ngoodnets(i)>25)
+    %    ngoodnets(i) = 25;
+    %end
+    ngoodnets(i) = min(ngoodnets(i),ngoodnets_tr(i));
     [sortedtestperf{i},sortind{i}] = sort(test_perf(i,:),'descend');
 end
 
@@ -104,12 +109,15 @@ nue = 0.42;
 VM = 1.3e-05;
 Ge = 3.4e09;
 gamma = 0.556;
+k=10^8;
 
 chi_new = zeros(sz_nt,combs);
+kcrit = zeros(sz_nt,combs);
 is_posdef = zeros(sz_nt, combs);
 chipres = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) (VM-VMc).*(Gs.^2.*(3-4.*nue)+Ge.^2.*(-3+4.*nus)).*k./(2.*z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
 chisurf = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) -(VM+VMc).*gamma.*k.^2./2./z;
 chitau = @(VM,VMc,z,Gs,Ge,nue,nus,k,gamma) (2.*Ge.*Gs.*(VM + VMc).*(2 -3.*nus + nue.*(-3 + 4.*nus)).*k)./(z.*(Gs.*(-3+4.*nue).*(-1+nus)+Ge.*(-1+nue).*(-3+4.*nus)));
+kcritfn = @(VM,v,z,Gs,Ge,nus,nue,gamma) 2*(-1+v)*(Gs^2*(-3+4*nue)+Ge^2*(3-4*nus))/((1+v)*gamma)/(Gs*(-3+4*nue)*(-1+nus)+Ge*(-1+nue)*(-3+4*nus));
 
 model_choice = zeros(num_coeffs, combs);
 for i=1:num_coeffs
@@ -156,8 +164,9 @@ for mat=1:sz_nt
         ind_new = (1:sz_nt);
         Nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
         vol_new = volrat(ind_new);
-        chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),10^8)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),10^8, gamma);
+        chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k,gamma)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k, gamma) + 1*chisurf(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k, gamma);
         chi_new(mat,i) = chi./10^12;
+        kcrit(mat,i) = kcritfn(VM,vol_new(mat),1,G(mat,i),Ge,Nu(mat,i),nue,gamma);
     end
     ind_posdefn{mat} = find(is_posdef(mat,:)==1);
     Gnew{mat} = G(mat,ind_posdefn{mat});
@@ -170,32 +179,73 @@ meanG = zeros(1,sz_nt);
 stdG = zeros(1,sz_nt);
 meanNu = zeros(1,sz_nt);
 stdNu = zeros(1,sz_nt);
+kcritmean = zeros(1,sz_nt);
 chimean = zeros(1,sz_nt);
 Cmatrixmean = zeros(sz_nt,6,6);
 Cmatrixstd = zeros(sz_nt,6,6);
+indsbad = [];
 for mat = 1:sz_nt
-    neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
-    tot = size(chi_new(mat,ind_posdefn{mat}),2);
-    prob_stable(mat) = neg/tot;
-    meanG(mat) = mean(Gnew{mat});
-    stdG(mat) = std(Gnew{mat});
-    meanNu(mat) = mean(Nunew{mat});
-    stdNu(mat) = std(Nunew{mat});
-    chimean(mat) = mean(chi_new(mat,ind_posdefn{mat}));
-    D = cat(3,Cmatrix{mat,ind_posdefn{mat}});
-    Cmatrixmean(mat,:,:) = mean(D,3);
-    Cmatrixstd(mat,:,:) = std(D,[],3);
+    if ~isempty(ind_posdefn{mat})
+        neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
+        tot = size(chi_new(mat,ind_posdefn{mat}),2);
+        prob_stable(mat) = neg/tot;
+        meanG(mat) = mean(Gnew{mat});
+        stdG(mat) = std(Gnew{mat});
+        meanNu(mat) = mean(Nunew{mat});
+        stdNu(mat) = std(Nunew{mat});
+        chimean(mat) = mean(chi_new(mat,ind_posdefn{mat}));
+        kcritmean(mat) = mean(kcrit(mat,ind_posdefn{mat}));
+        D = cat(3,Cmatrix{mat,ind_posdefn{mat}});
+        Cmatrixmean(mat,:,:) = mean(D,3);
+        Cmatrixstd(mat,:,:) = std(D,[],3);
+    else
+        indsbad = [indsbad, mat];
+    end
 end
-save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','-v7.3');
+%save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'kcritmean','prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','-v7.3');
 
-% %%
-histogram(meanG/10^9,'NumBins',25)
+%%
+figure
+% histogram(meanG/10^9,'NumBins',25)
+histogram(prob_stable,12)
 ax1=gca;
 set(ax1,'Box','on')
 set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'\textbf{Shear modulus/GPa}','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
-ylabel(ax1,'# of materials','Interpreter','latex','FontWeight','bold','FontSize',24,'Fontname','Times New Roman');
+xlabel(ax1,'\textbf{Probability of Stability}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 %xlim([120,200])
-% 
+%
+%%
+figure
+histogram(chimean,25)
+ax1=gca;
+set(ax1,'Box','on')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'\textbf{Stability parameter (kJ/mol.nm)}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%xlim([120,200])
 
+%%
+figure
+mat=3;
+histogram(chi_new(mat,ind_posdefn{mat}),25)
+ax1=gca;
+set(ax1,'Box','on')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'\textbf{Stability parameter (kJ/mol.nm)}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'\textbf{No. of Neural Networks}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+
+%%
+kcritmean(indsbad) = NaN;
+figure
+histogram(kcritmean,25)
+ax1=gca;
+set(ax1,'Box','on')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'$k_{crit}$','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%xlim([120,200])

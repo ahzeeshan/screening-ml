@@ -1,4 +1,4 @@
-function [ yfit ] = neural_net(XTRAIN,ytrain,XTEST,layer_size, sample_test, max_index, Rsq_val_reqd, Rsq_tr_reqd)
+function [ yfit ] = neural_net_ps(XTRAIN,ytrain,XTEST,layer_size, sample_test, max_index, Rsq_val_reqd, Rsq_tr_reqd)
 % This function returns yfit of the XTEST corresponding to neural network
 % model
 trainFcn = 'trainlm';

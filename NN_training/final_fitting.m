@@ -9,7 +9,6 @@ mycluster = parcluster('local')
   mycluster.JobStorageLocation = strcat(getenv('SCRATCH'),'/.matlab/', getenv('SLURM_JOB_ID'))
   mycluster.NumWorkers = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'))
   parpool(mycluster, mycluster.NumWorkers)
-  %parpool(mycluster, mycluster.NumWorkers)
   saveProfile(mycluster)
 
   lattice = fileread('lattice-type.txt');
@@ -85,7 +84,7 @@ net.trainParam.showWindow = 0;
 net.divideParam.trainRatio = 80/100;
 net.divideParam.valRatio = 20/100;
 net.divideParam.testRatio = 0/100;
-%        net.performParam.regularization = 0.01;
+%net.performParam.regularization = 0.01;
 net.trainParam.max_fail = 15;
         
 while((bool_var))

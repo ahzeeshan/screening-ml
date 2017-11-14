@@ -2,3 +2,4 @@ lattice-type.txt
 logg.txt
 *~
 *.DS_Store
+*.out

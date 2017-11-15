@@ -29,8 +29,8 @@ max_neuron = zeros(1,num_coeffs);
 hidden_layer_min = zeros(num_coeffs,num_kfolds);
 sample_test = 20;
 max_index = 1000;
-Rsq_val_reqd = 0.5; val_perf_reqd = 0.01;
-Rsq_tr_reqd = 0.7; reg_tr_reqd = 0.85;
+Rsq_val_reqd = 0.7; val_perf_reqd = 0.01;
+Rsq_tr_reqd = 0.85; reg_tr_reqd = 0.85;
 tr_perf_reqd = 0.01;
 for coeff_num = 1:1:num_coeffs % for all the coefficients
     %% Loading the data and normalising it to [-1 ,1]

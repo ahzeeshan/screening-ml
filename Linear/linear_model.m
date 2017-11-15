@@ -1,6 +1,6 @@
 clear all
-close all
-clc
+%close all
+%clc
 tic
 %% stepwisefit
 % lattice = {'cubic', 'hexagonal', 'monoclinic', 'orthorhombic', 'tetragonal-2', 'trigonal-2'};
@@ -15,9 +15,12 @@ tic
 % end
 
 %% sequential
-lattice = 'trigonal-2';
-load( fullfile('..','data-gen',strcat(lattice,'-data.mat')));
-n=50;
+lattice = 'cubic';
+warning('off')
+load( fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
+xdata = xdata(1:end-floor(0.1*size(xdata,1)),:);
+ydata = ydata(1:end-floor(0.1*size(xdata,1)),:);
+n=100;
 feature_list = cell(1,size(ydata,2));
 inmodel = cell(1,n);
 history = cell(1,n);

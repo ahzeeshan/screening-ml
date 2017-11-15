@@ -3,31 +3,39 @@ clear all
 %% Here you should put the predicted valued file with non_training data.
 lattice = strtrim(fileread('lattice-type.txt'));
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')));
-mps_nt = mps;
+mps_nt = mps; clear mps;
+load(fullfile('..','data-gen',strcat('pred-',lattice,'-non-training-data.mat')));
+G_mp = G; K_mp = K; clear G K;
+load(fullfile('..','Linear',strcat('features_',lattice,'.mat')));
 load(strcat(lattice,'_final_results.mat'));
-load(fullfile('..','data-gen',strcat(lattice,'-data.mat')));
-load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) ;
-load(fullfile('..','Linear',strcat('features_',lattice,'.mat'))) ;
+load(fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
 
-% In next few lines we convert the python indices into matlab indices
+disp(lattice)
 num_samples = 1000;
 X_mat = xdata(1:end-floor(0.1*size(xdata,1)),:);
 coeffs = ydata(1:end-floor(0.1*size(xdata,1)),:);
+Gvrhtr = Gvrh(1:end-floor(0.1*size(xdata,1)));
 cubic_nt = xntdata;
+
 
 % test data
 xtest = xdata(end-floor(0.1*size(xdata,1))+1:end,:);
 coeffstest = ydata(end-floor(0.1*size(xdata,1))+1:end,:);
+Gvrhtt = Gvrh(end-floor(0.1*size(xdata,1))+1:end);
 %cubic_nt = xdata;
 
+calcRsq = @(predvals,actualvals) 1 - nansum((predvals - actualvals).^2)/nansum((actualvals - mean(actualvals)).^2);
+fx=@(x) x;
 %%
+sz_tr = size(X_mat,1);
 sz_nt = size(cubic_nt,1);
 sz_tt = size(xtest,1);
 num_coeffs = size(coeffs,2);
-perf = zeros(num_samples, num_coeffs);
+tr_perf = zeros(num_coeffs, num_samples);
 Coeffs_cell = cell(num_samples, num_coeffs);
 predcoeffs = zeros(sz_nt, num_coeffs, num_samples);
 predcoeffs_test = zeros(sz_tt, num_coeffs, num_samples);
+predcoeffs_tr = zeros(sz_tr, num_coeffs, num_samples);
 test_perf = zeros(num_coeffs, num_samples);
 for coeff_num = 1:num_coeffs
     feature_arr = feature_list{coeff_num};
@@ -54,57 +62,96 @@ for coeff_num = 1:num_coeffs
         %tr.perf
         %tr.best_perf
         %tr.perf(end)
-        perf(num_samp,coeff_num) = tr.perf(end);
+        %tr_perf(coeff_num,num_samp) = tr.perf(end);
+        
+        Coeffs_tr = net(x);
         Coeffs_mat = net(non_training);
         Coeffs_test_mat = net(xtest_mapped);
         Coeffs_mat = mapminmax('reverse',Coeffs_mat,t_recover);
         Coeffs_test_mat = mapminmax('reverse',Coeffs_test_mat,t_recover);
+        Coeffs_tr = mapminmax('reverse',Coeffs_tr,t_recover);
+        predcoeffs_tr(:,coeff_num,num_samp) = Coeffs_tr;
         predcoeffs(:,coeff_num, num_samp) = Coeffs_mat;
         predcoeffs_test(:, coeff_num, num_samp) = Coeffs_test_mat;
         
-        test_perf(coeff_num, num_samp) = 1 - sum((coeffstest(:,coeff_num) - predcoeffs_test(:,coeff_num,num_samp)).^2)/sum((coeffstest(:,coeff_num) - mean(coeffstest(:,coeff_num))).^2);
+        tr_perf(coeff_num,num_samp) = calcRsq(predcoeffs_tr(:,coeff_num,num_samp),coeffs(:,coeff_num)); 
+        %1 - sum((coeffs(:,coeff_num) - predcoeffs_tr(:,coeff_num,num_samp)).^2)/sum((coeffs(:,coeff_num) - mean(coeffs(:,coeff_num))).^2);
+        test_perf(coeff_num, num_samp) = calcRsq(predcoeffs_test(:,coeff_num,num_samp),coeffstest(:,coeff_num));
+        %1 - sum((coeffstest(:,coeff_num) - predcoeffs_test(:,coeff_num,num_samp)).^2)/sum((coeffstest(:,coeff_num) - mean(coeffstest(:,coeff_num))).^2);
     end
 end
+
 
 %% generating model choices and good nets
 ngoodnets = zeros(1,num_coeffs);
 ngoodnets_tr = zeros(1,num_coeffs);
-sortedtestperf = cell(1,num_coeffs);
-sortind = cell(1, num_coeffs);
+ngoodnets_test = zeros(1,num_coeffs);
+sortedtestperf = cell(1,num_coeffs); sortedtrperf = cell(1,num_coeffs);
+sortind_tr = cell(1, num_coeffs); sortind_test = cell(1, num_coeffs);
 for i=1:num_coeffs
-    ngoodnets_tr(i) = length(find(index_out_coeffs{i}==0));
-    ngoodnets(i) = length(find(test_perf(i,:)>0.0));
-    %if(ngoodnets(i)>25)
-    %    ngoodnets(i) = 25;
+    %ngoodnets_tr(i) = length(find(index_out_coeffs{i}==0));
+    ngoodnets_tr(i) = length(find(tr_perf(i,:)>0.75));
+    ngoodnets_test(i) = length(find(test_perf(i,:)>0.0));
+    %if(ngoodnets_tr(i)==0)
+    %   ngoodnets_tr(i) = 25;
     %end
-    ngoodnets(i) = min(ngoodnets(i),ngoodnets_tr(i));
-    [sortedtestperf{i},sortind{i}] = sort(test_perf(i,:),'descend');
+    ngoodnets(i) = min(ngoodnets_test(i),ngoodnets_tr(i));
+    [sortedtestperf{i},sortind_test{i}] = sort(test_perf(i,:),'descend');
+    [sortedtrperf{i},sortind_tr{i}] = sort(tr_perf(i,:),'descend');
+    %ngoodnets(i) = 1;
 end
-
+%ngoodnets_tr=ones(1,num_coeffs)
+ngoodnets_tr
+ngoodnets_test
 ngoodnets
 
-%minbest = min(ngoodnets);
+%% plotting parity plot against training data
 
-%sortNchoose = zeros(minbest,num_coeffs);
-%Coeffs_mod = zeros(num_coeffs,minbest,sz_nt);
+for i=1:num_coeffs
+    figure
+    scatter( coeffs(:,i), predcoeffs_tr(:,i,sortind_tr{i}(2)) ,80,'filled');axis equal;
+    hold on;
+    fplot(fx,'Linewidth',4)
+    title(['C-',num2str(i)],'Fontsize',24)
+    %xlim([0,100]);ylim([0,100]);
+    ax1=gca;
+    set(ax1,'Box','on')
+    set(gcf,'Color','w','Position', [0, 0, 600, 500])
+    xlabel(ax1,'train actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+    %%%export_fig([lattice,'-tr-C',num2str(i),'.pdf'])
+end
 
-% for i=1:num_coeffs
-%     ind_full_val = find(index_out_coeffs{i}==0);
-%     perf_full = perf(ind_full_val,i);
-%     [val, sortind] = sort(perf_full);
-%     %sortNchoose(:,i) = ind_full_val(sortind(1:minbest));
-% end
+%% plotting parity plot against test data for the best case
+fx=@(x) x;
+for i=1:num_coeffs
+    figure
+    scatter( coeffstest(:,i), predcoeffs_test(:,i,sortind_tr{i}(1)) ,80,'filled');axis equal;
+    hold on;
+    fplot(fx,'Linewidth',4)
+    title(['C-',num2str(i)],'Fontsize',24)
+    %xlim([0,100]);ylim([0,100]);
+    ax1=gca;
+    set(ax1,'Box','on')
+    set(gcf,'Color','w','Position', [0, 0, 600, 500])
+    xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+    %%%export_fig([lattice,'-C',num2str(i),'.pdf'])
+end
 
-combs = 10000;
+
+%%
+combs = 1000;
 %cubic_mat = zeros(6,6,sz_nt,combs); -- not storing right now
-G_v = zeros(sz_nt,combs);
-G_r = zeros(sz_nt,combs);
-B_v = zeros(sz_nt,combs);
-B_r = zeros(sz_nt,combs);
-Nu = zeros(sz_nt,combs);
-G = zeros(sz_nt,combs);
-B = zeros(sz_nt,combs);
-
+% G_v = zeros(sz_nt,combs);
+% G_r = zeros(sz_nt,combs);
+% B_v = zeros(sz_nt,combs);
+% B_r = zeros(sz_nt,combs);
+% Nu = zeros(sz_nt,combs);
+% G = zeros(sz_nt,combs);
+% B = zeros(sz_nt,combs);
 nue = 0.42;
 VM = 1.3e-05;
 Ge = 3.4e09;
@@ -124,14 +171,119 @@ for i=1:num_coeffs
     %ll = 1;
     %ul = ngoodnets(i);
     %model_choice(i,:) = randi([1,ngoodnets(i)],1,combs);
-    model_choice(i,:) = datasample( sortind{i}(1:ngoodnets(i)) , combs);
+    model_choice(i,:) = datasample( sortind_tr{i}(1:ngoodnets_tr(i)) , combs);
 end
 
-%%
+%% Training data from Model
+Gnewtr = cell(1,sz_tr);
+Nunewtr = cell(1,sz_tr);
+ind_posdefntr = cell(1,sz_tr);
+Cmatrixtr = cell(sz_tr,combs);
+G = zeros(sz_tr,combs);
+B = zeros(sz_tr,combs);
+Nu = zeros(sz_tr,combs);
+for mat=1:sz_tr
+    mat
+    for i=1:combs
+        coeffs_modeltr = [];
+        for j=1:num_coeffs
+            coeffs_modeltr = [coeffs_modeltr, predcoeffs_tr(mat, j, model_choice(j,i))];
+        end
+        Cmat = constructC(lattice, coeffs_modeltr);
+        Cmatrixtr{mat,i} = Cmat;
+        [~,p] = chol(Cmat);
+        if (det(Cmat)~=0)
+            [~, p] = chol(Cmat);
+            if(p==0)
+                is_posdef(mat,i) = 1;
+            end
+            Smat = inv(Cmat);
+            G_v = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+3*(Cmat(4,4)+Cmat(5,5)+Cmat(6,6))-Cmat(1,2)-Cmat(2,3)-Cmat(3,1))/15;
+            B_v = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+2*(Cmat(1,2)+Cmat(2,3)+Cmat(3,1)))/9;
+            B_r = 1/(Smat(1,1)+Smat(2,2)+Smat(3,3)+2*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+            G_r = 15/(4*(Smat(1,1)+Smat(2,2)+Smat(3,3))+3*(Smat(4,4)+Smat(5,5)+Smat(6,6))-4*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+        else
+            G_v = 0;
+            G_r = 0;
+            B_v = 0;
+            B_r = 0;
+        end
+        
+        B(mat,i) = 0.5*(B_v+B_r)*10^9;
+        G(mat,i) = 0.5*(G_v+G_r)*10^9;
+        ind_new = (1:sz_nt);
+        Nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
+        vol_new = volrat(ind_new);
+        chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k,gamma)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k, gamma) + 1*chisurf(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k, gamma);
+        chi_new(mat,i) = chi./10^12;
+        kcrit(mat,i) = kcritfn(VM,vol_new(mat),1,G(mat,i),Ge,Nu(mat,i),nue,gamma);
+    end
+    ind_posdefntr{mat} = find(is_posdef(mat,:)==1);
+    Gnewtr{mat} = G(mat,ind_posdefntr{mat});
+    Nunewtr{mat} = Nu(mat,ind_posdefntr{mat});
+end
+prob_stabletr = zeros(1,sz_tr);
+meanGtr = zeros(1,sz_tr);
+stdGtr = zeros(1,sz_tr);
+meanNutr = zeros(1,sz_tr);
+stdNutr = zeros(1,sz_tr);
+kcritmeantr = zeros(1,sz_tr);
+chimeantr = zeros(1,sz_tr);
+Cmatrixmeantr = zeros(sz_tr,6,6);
+Cmatrixstdtr = zeros(sz_tr,6,6);
+indsbadtr = [];
+for mat = 1:sz_tr
+    if ~isempty(ind_posdefntr{mat})
+        neg = size(find(chi_new(mat,ind_posdefntr{mat})<0),2);
+        tot = size(chi_new(mat,ind_posdefntr{mat}),2);
+        prob_stabletr(mat) = neg/tot;
+        meanGtr(mat) = mean(Gnewtr{mat});
+        stdGtr(mat) = std(Gnewtr{mat});
+        meanNutr(mat) = mean(Nunewtr{mat});
+        stdNutr(mat) = std(Nunewtr{mat});
+        chimeantr(mat) = mean(chi_new(mat,ind_posdefntr{mat}));
+        kcritmeantr(mat) = mean(kcrit(mat,ind_posdefntr{mat}));
+        D = cat(3,Cmatrixtr{mat,ind_posdefntr{mat}});
+        Cmatrixmeantr(mat,:,:) = mean(D,3);
+        Cmatrixstdtr(mat,:,:) = std(D,[],3);
+    else
+        indsbadtr = [indsbadtr, mat];
+%         prob_stabletr(mat) = NaN;
+%         meanGtr(mat) = NaN;
+%         stdGtr(mat) = NaN;
+%         meanNutr(mat) = NaN;
+%         stdNutr(mat) = NaN;
+%         chimeantr(mat) = NaN;
+%         kcritmeantr(mat) = NaN;
+%         %D = cat(3,Cmatrixtr{mat,ind_posdefntr{mat}});
+%         Cmatrixmeantr(mat,:,:) = NaN;
+%         Cmatrixstdtr(mat,:,:) = NaN;
+    end
+end
+
+
+Rsq_trG = calcRsq(meanGtr(setdiff(1:end,indsbadtr))/10^9, Gvrhtr(setdiff(1:end,indsbadtr)));
+Rsq_trG
+
+figure; hold on;
+scatter(Gvrhtr(setdiff(1:end,indsbadtr)),meanGtr(setdiff(1:end,indsbadtr))/10^9, 60,'filled');
+fplot(fx,'Linewidth',4);title('Training data G','Fontsize',24);
+ax1=gca;
+%axis([1 400 1 400]);
+set(ax1,'Box','on')
+%set(ax1,'xscale','log','yscale','log');
+set(gcf,'Color','w','Position', [0, 0, 600, 500]);
+xlabel(ax1,'DFT calculated (mp)','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman');
+
+%% Predictions on nt data
 Gnew = cell(1,sz_nt);
 Nunew = cell(1,sz_nt);
 ind_posdefn = cell(1,sz_nt);
 Cmatrix = cell(sz_nt,combs);
+G = zeros(sz_nt,combs);
+B = zeros(sz_nt,combs);
 for mat=1:sz_nt
     mat
     for i=1:combs
@@ -173,7 +325,6 @@ for mat=1:sz_nt
     Nunew{mat} = Nu(mat,ind_posdefn{mat});
 end
 
-%% Creating normal distribution
 prob_stable = zeros(1,sz_nt);
 meanG = zeros(1,sz_nt);
 stdG = zeros(1,sz_nt);
@@ -202,10 +353,152 @@ for mat = 1:sz_nt
         indsbad = [indsbad, mat];
     end
 end
-%save(strcat(lattice,'_post_results.mat'), 'chimean', 'meanG', 'kcritmean','prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','-v7.3');
+%save(strcat(lattice,'_post_results.mat'),'mps_nt','chimean', 'meanG', 'kcritmean','prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','indsbad','-v7.3');
 
-%%
+%% Materials Project prediction Comparison
 figure
+meanG(indsbad)=NaN;
+%scatter(G_mp,meanG/10^9,'o')
+scatter(G_mp, meanG/10^9, 60,'filled'); hold on;
+fx=@(x) x;
+fplot(fx,'Linewidth',4)
+xlim([1,400]);ylim([1,400]);
+ax1=gca;
+set(ax1,'Box','on','xscale','log','yscale','log')
+%axis([0 400 0 400])
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%%%export_fig([lattice,'-G_mp.pdf'])
+
+%% Materials Project comparison with error bars
+figure
+errorbar(G_mp, meanG/10^9, stdG/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+fplot(fx,'Linewidth',4);
+%xlim([0,120]);ylim([0,120]);
+ax1=gca;
+set(ax1,'Box','on')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%%%export_fig([lattice,'-GwErr_mp.pdf'])
+
+
+%% Shear modulus comparison on test set
+%Cmat_tt = cell(1,sz_tt);
+Gnewtr = cell(1,sz_tr);
+Nunewtr = cell(1,sz_tr);
+ind_posdefntr = cell(1,sz_tr);
+Cmatrixtt = cell(sz_tr,combs);
+G = zeros(sz_tr,combs);
+B = zeros(sz_tr,combs);
+Nu = zeros(sz_tr,combs);
+for mat=1:sz_tt
+    mat
+    for i=1:combs
+        coeffs_model = [];
+        for j=1:num_coeffs
+            coeffs_model = [coeffs_model, predcoeffs_test(mat, j, model_choice(j,i))];
+        end
+        Cmat = constructC(lattice, coeffs_model);
+        %Cmat_tt = constructC(lattice, coeffstest(mat,:));
+        Cmatrixtt{mat} = Cmat_tt;
+        Cmatrix{mat,i} = Cmat;
+        [~,p] = chol(Cmat);
+        if (det(Cmat)~=0)
+            [~, p] = chol(Cmat);
+            if(p==0)
+                is_posdef(mat,i) = 1;
+            end
+            Smat = inv(Cmat);
+            Smat_tt = inv(Cmat_tt);
+            G_v = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+3*(Cmat(4,4)+Cmat(5,5)+Cmat(6,6))-Cmat(1,2)-Cmat(2,3)-Cmat(3,1))/15;
+            B_v = (Cmat(1,1)+Cmat(2,2)+Cmat(3,3)+2*(Cmat(1,2)+Cmat(2,3)+Cmat(3,1)))/9;
+            B_r = 1/(Smat(1,1)+Smat(2,2)+Smat(3,3)+2*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+            G_r = 15/(4*(Smat(1,1)+Smat(2,2)+Smat(3,3))+3*(Smat(4,4)+Smat(5,5)+Smat(6,6))-4*(Smat(1,2)+Smat(2,3)+Smat(3,1)));
+            
+            %G_vtt = (Cmat_tt(1,1)+Cmat_tt(2,2)+Cmat_tt(3,3)+3*(Cmat_tt(4,4)+Cmat_tt(5,5)+Cmat_tt(6,6))-Cmat_tt(1,2)-Cmat_tt(2,3)-Cmat_tt(3,1))/15;
+            %B_vtt = (Cmat_tt(1,1)+Cmat_tt(2,2)+Cmat_tt(3,3)+2*(Cmat_tt(1,2)+Cmat_tt(2,3)+Cmat_tt(3,1)))/9;
+            B_rtt = 1/(Smat_tt(1,1)+Smat_tt(2,2)+Smat_tt(3,3)+2*(Smat_tt(1,2)+Smat_tt(2,3)+Smat_tt(3,1)));
+            G_rtt = 15/(4*(Smat_tt(1,1)+Smat_tt(2,2)+Smat_tt(3,3))+3*(Smat_tt(4,4)+Smat_tt(5,5)+Smat_tt(6,6))-4*(Smat_tt(1,2)+Smat_tt(2,3)+Smat_tt(3,1)));
+
+        else
+            G_v = 0;
+            G_r = 0;
+            B_v = 0;
+            B_r = 0;
+        end
+        
+        B(mat,i) = 0.5*(B_v+B_r)*10^9;
+        G(mat,i) = 0.5*(G_v+G_r)*10^9;
+        %Btt(mat) = 0.5*(B_vtt+B_rtt)*10^9;
+        %Gtt(mat) = 0.5*(G_vtt+G_rtt)*10^9;
+        
+        %ind_new = (1:sz_nt);
+        %Nu(mat, i) = (3.*B(mat, i) - 2.*G(mat, i))./(6.*B(mat, i) + 2.*G(mat, i));
+        %vol_new = volrat(ind_new);
+        %chi = chipres(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k,gamma)+chitau(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k, gamma) + 1*chisurf(VM,vol_new(mat)*VM,1,G(mat,i),Ge,nue,Nu(mat,i),k, gamma);
+        %chi_new(mat,i) = chi./10^12;
+        %kcrit(mat,i) = kcritfn(VM,vol_new(mat),1,G(mat,i),Ge,Nu(mat,i),nue,gamma);
+    end
+    ind_posdefn{mat} = find(is_posdef(mat,:)==1);
+    Gnewtt{mat} = G(mat,ind_posdefn{mat});
+    %meanGtest(mat) = mean(Gnew{mat});
+    %stdGtest(mat) = std(Gnew{mat});
+    %Nunew{mat} = Nu(mat,ind_posdefn{mat});
+end
+
+prob_stable = zeros(1,sz_tt);
+meanGtt = zeros(1,sz_tt);
+stdGtt = zeros(1,sz_tt);
+meanNutt = zeros(1,sz_tt);
+stdNutt = zeros(1,sz_tt);
+kcritmeantt = zeros(1,sz_tt);
+chimeantt = zeros(1,sz_tt);
+Cmatrixmeantt = zeros(sz_tt,6,6);
+Cmatrixstdtt = zeros(sz_tt,6,6);
+indsbadtt = [];
+for mat = 1:sz_tt
+    if ~isempty(ind_posdefn{mat})
+        neg = size(find(chi_new(mat,ind_posdefn{mat})<0),2);
+        tot = size(chi_new(mat,ind_posdefn{mat}),2);
+        prob_stable(mat) = neg/tot;
+        meanGtt(mat) = mean(Gnewtt{mat});
+        stdGtt(mat) = std(Gnewtt{mat});
+        meanNutt(mat) = mean(Nunew{mat});
+        stdNutt(mat) = std(Nunew{mat});
+        chimeantt(mat) = mean(chi_new(mat,ind_posdefn{mat}));
+        kcritmeantt(mat) = mean(kcrit(mat,ind_posdefn{mat}));
+        D = cat(3,Cmatrixtt{mat,ind_posdefn{mat}});
+        Cmatrixmeantt(mat,:,:) = mean(D,3);
+        Cmatrixstdtt(mat,:,:) = std(D,[],3);
+    else
+        indsbadtt = [indsbadtt, mat];
+    end
+end
+Rsq_ttG = calcRsq(meanGtt(setdiff(1:end,indsbadtt))/10^9, Gvrhtt(setdiff(1:end,indsbadtt)));
+%scatter(Gtt/10^9, meanGtest/10^9, 60,'filled'); hold on;
+%fplot(fx,'Linewidth',4)
+figure;hold on;
+scatter(Gtt/10^9,meanGtt/10^9, 60,'filled')
+%errorbar(Gtt/10^9, meanGtest/10^9, stdGtest/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+fplot(fx,'Linewidth',4);title('Test data G','Fontsize',24)
+%xlim([0,120]);ylim([0,120]);
+ax1=gca;
+axis([1 400 1 400])
+set(ax1,'Box','on','xscale','log','yscale','log')
+set(gcf,'Color','w','Position', [0, 0, 600, 500])
+xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+
+
+
+%% Probability of stability for all materials
+figure
+prob_stable(indsbad)=NaN;
 % histogram(meanG/10^9,'NumBins',25)
 histogram(prob_stable,12)
 ax1=gca;
@@ -214,9 +507,9 @@ set(gcf,'Color','w','Position', [0, 0, 600, 500])
 xlabel(ax1,'\textbf{Probability of Stability}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-%xlim([120,200])
 %
-%%
+%% Plotting chi for all materials
+chimean(indsbad)=NaN;
 figure
 histogram(chimean,25)
 ax1=gca;
@@ -227,18 +520,18 @@ ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold'
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 %xlim([120,200])
 
-%%
-figure
-mat=3;
-histogram(chi_new(mat,ind_posdefn{mat}),25)
-ax1=gca;
-set(ax1,'Box','on')
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'\textbf{Stability parameter (kJ/mol.nm)}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'\textbf{No. of Neural Networks}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% %%
+% figure
+% mat=3;
+% histogram(chi_new(mat,ind_posdefn{mat}),25)
+% ax1=gca;
+% set(ax1,'Box','on')
+% set(gcf,'Color','w','Position', [0, 0, 600, 500])
+% xlabel(ax1,'\textbf{Stability parameter (kJ/mol.nm)}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'\textbf{No. of Neural Networks}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 
-%%
+%% Plotting critical k for all materials
 kcritmean(indsbad) = NaN;
 figure
 histogram(kcritmean,25)
@@ -248,4 +541,4 @@ set(gcf,'Color','w','Position', [0, 0, 600, 500])
 xlabel(ax1,'$k_{crit}$','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-%xlim([120,200])
+

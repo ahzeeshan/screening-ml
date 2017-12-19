@@ -19,8 +19,8 @@ load(fullfile('..','data-gen',strcat(lattice,'-data-posd.mat'))) % xdata and yda
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat')))
 
 %% User input data
-X_mat = xdata(1:end-floor(0.1*size(xdata,1)),:);
-coeffs = ydata(1:end-floor(0.1*size(xdata,1)),:);
+X_mat = xdata(trainIndglob,:);
+coeffs = ydata(trainIndglob,:);
 num_coeffs = size(coeffs,2);
 cubic_nt = xntdata;
 

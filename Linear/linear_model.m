@@ -18,16 +18,21 @@ tic
 lattice = 'cubic';
 warning('off')
 load( fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
-xdata = xdata(1:end-floor(0.1*size(xdata,1)),:);
-ydata = ydata(1:end-floor(0.1*size(xdata,1)),:);
-n=100;
+
+[trainIndglob,valIndglob,testIndglob] = dividerand(size(xdata,1),0.9,0,0.1);
+
+%xdata = xdata(1:end-floor(0.1*size(xdata,1)),:);
+%ydata = ydata(1:end-floor(0.1*size(xdata,1)),:);
+xdata = xdata(trainIndglob, :);
+ydata = ydata(trainIndglob, :);
+n=1;
 feature_list = cell(1,size(ydata,2));
 inmodel = cell(1,n);
 history = cell(1,n);
 for ncoeff=1:size(ydata,2)
 criteria = 100000000;
 for i=1:n
-load( fullfile('..','data-gen',strcat(lattice,'-data.mat')));
+load( fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
 opts = statset('display','iter','TolTypeFun','rel');
 [inmodel{i},history{i}] = sequentialfs(@getmse,xdata,ydata(:,ncoeff),'cv',5,'options',opts,'direction','backward');
 if criteria > history{i}.Crit(end)
@@ -39,5 +44,5 @@ criteria_list(ncoeff) = criteria;
 a = (1:size(xdata,2));
 feature_list{ncoeff} = a(inmodel{min_index});
 end
-save(strcat('features_',lattice,'.mat'), 'feature_list','criteria_list')
+save(strcat('features_',lattice,'.mat'), 'feature_list','criteria_list','trainIndglob','valIndglob','testIndglob')
 toc

@@ -5,3 +5,5 @@ logg.txt
 *.out
 *.pdf
 *.pyc
+*.log
+*.sh

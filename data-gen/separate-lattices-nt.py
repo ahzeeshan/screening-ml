@@ -4,9 +4,22 @@ import pymatgen
 import pdb
 import os
 
-with open('non-training-set-data.json') as ts:
-    ts_data = json.load(ts)
+from constants import asym_mp
+
+#with open('non-training-set-data.json') as ts:
+#    ts_data = json.load(ts)
+
+with open('Li-cmpd-data-Dec18.json') as f:
+    ts_data = json.load(f)
     
+negslist = []
+with open("negative-eig.txt") as f:
+    for l in f:
+        negslist.append(l.strip())
+negslist = negslist[1:]
+print len(negslist)
+
+
 print len(ts_data)
 cubic_training_set = []
 monoclinic_ts = []
@@ -24,38 +37,38 @@ path = 'non-training-groups/'
 for index, elem_data in enumerate(ts_data):
     if index%100 == 0:
         print index 
-    st = pymatgen.Structure.from_str(elem_data['cif'], fmt = "cif")
-    analyzer = pymatgen.symmetry.analyzer.SpacegroupAnalyzer(st)
-    crys_sys = analyzer.get_crystal_system()
-    var = analyzer.get_point_group_symbol()
-    if crys_sys == 'cubic':
-        cubic_training_set.append(elem_data)
-    elif crys_sys == 'monoclinic':
-        monoclinic_ts.append(elem_data)
+    if elem_data['elasticity']== None or elem_data['task_id'] in asym_mp or elem_data['task_id'] in negslist:
+        st = pymatgen.Structure.from_str(elem_data['cif'], fmt = "cif")
+        analyzer = pymatgen.symmetry.analyzer.SpacegroupAnalyzer(st)
+        crys_sys = analyzer.get_crystal_system()
+        var = analyzer.get_point_group_symbol()
+        if crys_sys == 'cubic':
+            cubic_training_set.append(elem_data)
+        elif crys_sys == 'monoclinic':
+            monoclinic_ts.append(elem_data)
 
-    elif crys_sys == 'orthorhombic':
-           orthorhombic_ts.append(elem_data)
-    elif crys_sys == 'triclinic':
-        triclinic_ts.append(elem_data)
-    elif crys_sys == 'hexagonal':
-        hexagonal_ts.append(elem_data)
-    elif crys_sys == 'tetragonal':
-        if var == '4' or var == '-4' or var == '4/m':
-            tetragonal_ts1.append(elem_data)
-        elif var == '4mm' or var == '-42m' or var == '422' or var == '4/mmm': 
-            tetragonal_ts2.append(elem_data)
+        elif crys_sys == 'orthorhombic':
+            orthorhombic_ts.append(elem_data)
+        elif crys_sys == 'triclinic':
+            triclinic_ts.append(elem_data)
+        elif crys_sys == 'hexagonal':
+            hexagonal_ts.append(elem_data)
+        elif crys_sys == 'tetragonal':
+            if var == '4' or var == '-4' or var == '4/m':
+                tetragonal_ts1.append(elem_data)
+            elif var == '4mm' or var == '-42m' or var == '422' or var == '4/mmm': 
+                tetragonal_ts2.append(elem_data)
+            else:
+                raise ValueError('No point group found for this tetragonal material {}'.format(elem_data['task_id']))
+        elif crys_sys == 'trigonal':
+            if var == '3' or var == '-3':
+                trigonal_ts1.append(ts_data[index]) 
+            elif var == '32' or var == '-3m' or var == '3m':
+                trigonal_ts2.append(elem_data)
+            else: 
+                raise ValueError('No point group found for this trigonal material {}'.format(elem_data['task_id']))
         else:
-           raise ValueError('No point group found for this tetragonal material {}'.format(elem_data['task_id']))
-    elif crys_sys == 'trigonal':
-        if var == '3' or var == '-3':
-            trigonal_ts1.append(ts_data[index]) 
-        elif var == '32' or var == '-3m' or var == '3m':
-            trigonal_ts2.append(elem_data)
-        else: 
-            raise ValueError('No point group found for this trigonal material {}'.format(elem_data['task_id']))
-
-    else:
-        raise ValueError('No crystal class found for this material {}'.format(elem_data['task_id'])) #Just if any case if the above cases are not covered 
+            raise ValueError('No crystal class found for this material {}'.format(elem_data['task_id'])) #Just if any case if the above cases are not covered 
 
 
 

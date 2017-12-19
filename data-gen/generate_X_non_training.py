@@ -7,7 +7,7 @@ import pymatgen
 from pymatgen.analysis.structure_analyzer import VoronoiCoordFinder as VCF
 import pdb
 
-with open('Li-cmpd-data-new.json') as f:
+with open('Li-cmpd-data-Dec18.json') as f:
 	data = json.load(f)
 
 mps = np.genfromtxt('mpswoNaN.txt', usecols=0, dtype = 'string')

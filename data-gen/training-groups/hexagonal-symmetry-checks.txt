@@ -4,22 +4,26 @@ subsets mp index formula disparity
 Crosses
 (i,j) mp formula disparity
 (6, 6) mp-10173 Li -0.5
+(6, 6) mp-1021323 LiC12 -0.5
 (6, 6) mp-1001581 LiC6 0.5
 (6, 6) mp-9563 Li2Sb -0.5
 (6, 6) mp-2744 LiPd -0.5
-(6, 6) mp-973415 LiLa3 -0.5
 (6, 6) mp-976280 LiBr -0.5
 (6, 6) mp-841 Li2O2 -0.5
 (6, 6) mp-2251 Li3N 0.5
 (6, 6) mp-9919 LiZnSb -0.5
 (6, 6) mp-7936 LiNbS2 0.5
 (6, 6) mp-11977 LiSnAu -0.5
+(6, 6) mp-28835 LiScI3 0.5
 (6, 6) mp-15686 Li2CuAs 0.5
 (6, 6) mp-14208 LiYSi 0.5
+(6, 6) mp-941221 Li(BH)5 0.5
 (6, 6) mp-9244 LiBC -0.5
 (6, 6) mp-10614 SrLiP 0.5
 (6, 6) mp-12029 Li2CuP 0.5
 (6, 6) mp-569834 LiCu2Sn 0.5
+(6, 6) mp-765851 LiVF3 0.5
+(6, 6) mp-23797 LiH6ClO7 -0.5
 (6, 6) mp-6179 KLiSO4 0.5
 
 Parities

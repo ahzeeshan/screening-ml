@@ -6,7 +6,7 @@ import math
 import pymatgen
 from pymatgen.analysis.structure_analyzer import VoronoiCoordFinder as VCF
 
-with open('Li-cmpd-data-new.json') as f:
+with open('Li-cmpd-data-Dec18.json') as f:
 	data = json.load(f)
 
 mps = np.genfromtxt('mpswoNaN.txt', usecols=0, dtype = 'string')
@@ -37,6 +37,9 @@ def generate_XYdata(symmetry, equals):
 				elastic_mat = elem['elasticity']['elastic_tensor']
 				if not(np.all(np.linalg.eigvals(elastic_mat) > 0)):
 					store_mat = False
+					print mp
+					print elastic_mat
+					raise ValueError('This should have appeared earlier. No?')
 				if mp == elem['task_id'] and mp not in asym_mp and store_mat:
 					mps_data.append(mp)
 					#xdata.append(feature)

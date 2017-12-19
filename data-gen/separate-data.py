@@ -1,6 +1,6 @@
 import json 
 
-with open('Li-cmpd-data-new.json') as f:
+with open('Li-cmpd-data-Dec18.json') as f:
     data = json.load(f)
 
 size_data = len(data)
@@ -23,5 +23,7 @@ with open('training-set-data.json','w') as td:
 with open('non-training-set-data.json','w') as ntd:
     json.dump(data_non_training,ntd)
 # Doing random check 
-print data_training[0]
-print data_non_training[0]
+
+
+print len(data_training)
+print len(data_non_training)

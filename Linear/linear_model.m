@@ -25,7 +25,7 @@ load( fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
 %ydata = ydata(1:end-floor(0.1*size(xdata,1)),:);
 xdata = xdata(trainIndglob, :);
 ydata = ydata(trainIndglob, :);
-n=1;
+n=100;
 feature_list = cell(1,size(ydata,2));
 inmodel = cell(1,n);
 history = cell(1,n);

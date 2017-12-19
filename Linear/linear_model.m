@@ -32,7 +32,7 @@ history = cell(1,n);
 for ncoeff=1:size(ydata,2)
 criteria = 100000000;
 for i=1:n
-load( fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
+%load( fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
 opts = statset('display','iter','TolTypeFun','rel');
 [inmodel{i},history{i}] = sequentialfs(@getmse,xdata,ydata(:,ncoeff),'cv',5,'options',opts,'direction','backward');
 if criteria > history{i}.Crit(end)

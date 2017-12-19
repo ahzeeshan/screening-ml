@@ -7,18 +7,17 @@ mycluster = parcluster('local')
   mycluster.JobStorageLocation = strcat(getenv('SCRATCH'),'/.matlab/', getenv('SLURM_JOB_ID'))
   mycluster.NumWorkers = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'))
   parpool(mycluster, mycluster.NumWorkers)
-  %parpool(mycluster, mycluster.NumWorkers)
-  saveProfile(mycluster)
+    saveProfile(mycluster)
 
 lattice = strtrim(fileread('lattice-type.txt'));
 disp(lattice)
 load(fullfile('..','data-gen',strcat(lattice,'-data-posd.mat'))) % xdata and ydata
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat')))
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')))
-X_mat = xdata(1:end-floor(0.1*size(xdata,1)),:);
+X_mat = xdata(trainIndglob,:);
 
 %% Here is where you need to change the things for different coefficients
-coeffs = ydata(1:end-floor(0.1*size(xdata,1)),:);
+coeffs = ydata(trainIndglob,:);
 num_coeffs = size(coeffs,2);
 cubic_nt = xntdata; % 626 by 18
 hidden_layer_size_range = (1:10);
@@ -27,10 +26,10 @@ mse_size = cell(1,num_coeffs);
 max_neuron = zeros(1,num_coeffs);
 %mse_size = zeros(num_coeffs, num_kfolds, length(hidden_layer_size_range));
 hidden_layer_min = zeros(num_coeffs,num_kfolds);
-sample_test = 20;
+sample_test = 200;
 max_index = 1000;
-Rsq_val_reqd = 0.7; val_perf_reqd = 0.01;
-Rsq_tr_reqd = 0.85; reg_tr_reqd = 0.85;
+Rsq_val_reqd = -inf; val_perf_reqd = 0.01;
+Rsq_tr_reqd = -inf; reg_tr_reqd = 0.85;
 tr_perf_reqd = 0.01;
 for coeff_num = 1:1:num_coeffs % for all the coefficients
     %% Loading the data and normalising it to [-1 ,1]
@@ -54,7 +53,8 @@ for coeff_num = 1:1:num_coeffs % for all the coefficients
     
     k = 5;
     
-max_neuron(coeff_num) = floor( (size(X_mat,1)-1)/(length(feature_list{coeff_num})+2));
+    %max_neuron(coeff_num) = floor( (size(X_mat,1)-1)/(length(feature_list{coeff_num})+2));
+    max_neuron(coeff_num) = length(feature_list{coeff_num});
     mmax = max_neuron(coeff_num);
     
     if floor(max_neuron(coeff_num))==1
@@ -71,7 +71,7 @@ max_neuron(coeff_num) = floor( (size(X_mat,1)-1)/(length(feature_list{coeff_num}
             mse_temp_val = zeros(1,mmax);
             for layer_size = 1:mmax
                 layer_size
-                fun = @(XTRAIN,ytrain,XTEST) neural_net_ps(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,val_perf_reqd, reg_tr_reqd);
+                fun = @(XTRAIN,ytrain,XTEST) neural_net_ps(XTRAIN,ytrain,XTEST,layer_size,sample_test,max_index,Rsq_val_reqd, Rsq_tr_reqd);
                 mse_temp_val(layer_size)  = crossval('mse',x',t','Predfun',fun,'kfold',k);
             end
             mse_size{coeff_num}(random_kfold,:) = mse_temp_val;
@@ -89,6 +89,7 @@ for coeff_num=1:num_coeffs
     [mse_min_av,ind_min_av] = min(mse_fold_av{coeff_num});
     hidden_layer_av(coeff_num) = ind_min_av;
 end
+
 max_neuron
 hidden_layer_av
 %mse_fold_av = mean(mse_size,2);

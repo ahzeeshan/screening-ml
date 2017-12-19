@@ -6,9 +6,10 @@ XTRAIN = XTRAIN';
 ytrain = ytrain';
 XTEST = XTEST';
 %val_min = 1;
-tr_perf_min = 1;
+%tr_perf_min = 1;
 %net_min = [];
 net_min = cell(1,sample_test);
+val_min = ones(sample_test);
 parfor random_weights = 1:1:sample_test
     net = fitnet(layer_size,trainFcn);
     net = configure(net,XTRAIN,ytrain);
@@ -19,7 +20,7 @@ parfor random_weights = 1:1:sample_test
     net.performParam.regularization = 0;
     bool_var = 1;
     index_watch = 1;
-    val_min(random_weights) = 1;
+    %    val_min(random_weights) = 1;
     %net_min{random_weights} = [];
     while((bool_var))
         init(net);

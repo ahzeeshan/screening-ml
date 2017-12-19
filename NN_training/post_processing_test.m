@@ -3,7 +3,7 @@ clear all
 %% Here you should put the predicted valued file with non_training data.
 lattice = strtrim(fileread('lattice-type.txt'));
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')));
-mps_nt = mps; clear 0.35mps;
+mps_nt = mps; clear mps;
 load(fullfile('..','data-gen',strcat('pred-',lattice,'-non-training-data.mat')));
 G_mp = G; K_mp = K; clear G K;
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat')));

@@ -5,7 +5,7 @@ m = MPRester('TCfhlU2O1TZcNbM0')
 
 files = glob('*non-training-data.mat')
 print files
-files = [files[-4]]
+#files = [files[-4]]
 print files
 for f in files:
 	data_pred = spio.loadmat(f)

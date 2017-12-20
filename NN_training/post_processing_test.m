@@ -12,15 +12,15 @@ load(fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
 
 disp(lattice)
 num_samples = 1000;
-X_mat = xdata(1:end-floor(0.1*size(xdata,1)),:);
-coeffs = ydata(1:end-floor(0.1*size(xdata,1)),:);
-Gvrhtr = Gvrh(1:end-floor(0.1*size(xdata,1)));
+X_mat = xdata(trainIndglob,:);
+coeffs = ydata(trainIndglob,:);
+Gvrhtr = Gvrh(trainIndglob);
 cubic_nt = xntdata;
 
 % test data
-xtest = xdata(end-floor(0.1*size(xdata,1))+1:end,:);
-coeffstest = ydata(end-floor(0.1*size(xdata,1))+1:end,:);
-Gvrhtt = Gvrh(end-floor(0.1*size(xdata,1))+1:end);
+xtest = xdata(testIndglob,:);
+coeffstest = ydata(testIndglob,:);
+Gvrhtt = Gvrh(testIndglob);
 
 calcRsq = @(predvals,actualvals) 1 - sum((predvals - actualvals).^2)/sum((actualvals - mean(actualvals)).^2);
 fx=@(x) x;
@@ -508,7 +508,7 @@ save(strcat(lattice,'_post_results.mat'),'mps_nt','chimean', 'meanG', 'kcritmean
 figure
 %meanG(indsbad)=NaN;
 %scatter(G_mp,meanG/10^9,'o')
-scatter(G_mp(setdiff(1:end,indsbadtt)), meanG(setdiff(1:end,indsbadtt))/10^9, 60,'filled'); hold on;
+scatter(G_mp(setdiff(1:end,indsbad)), meanG(setdiff(1:end,indsbad))/10^9, 60,'filled'); hold on;
 fx=@(x) x;
 fplot(fx,'Linewidth',4)
 xlim([1,400]);ylim([1,400]);
@@ -523,7 +523,7 @@ export_fig([lattice,'-G_mp.pdf'])
 
 %% Materials Project comparison with error bars
 figure
-errorbar(G_mp(setdiff(1:end,indsbadtt)), meanG(setdiff(1:end,indsbadtt))/10^9, stdG(setdiff(1:end,indsbadtt))/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+errorbar(G_mp(setdiff(1:end,indsbad)), meanG(setdiff(1:end,indsbad))/10^9, stdG(setdiff(1:end,indsbad))/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
 fplot(fx,'Linewidth',4);
 xlim([1,400]);ylim([1,400]);
 ax1=gca;
@@ -539,9 +539,9 @@ set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTic
 
 %% Probability of stability for all materials
 figure
-prob_stable(indsbad)=NaN;
+%prob_stable(indsbad)=NaN;
 % histogram(meanG/10^9,'NumBins',25)
-histogram(prob_stable,12)
+histogram(prob_stable(setdiff(1:end,indsbad)),12)
 ax1=gca;
 set(ax1,'Box','on')
 set(gcf,'Color','w','Position', [0, 0, 600, 500])
@@ -550,9 +550,9 @@ ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold'
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 %
 %% Plotting chi for all materials
-chimean(indsbad)=NaN;
+%chimean(indsbad)=NaN;
 figure
-histogram(chimean,25)
+histogram(chimean(setdiff(1:end,indsbad)),25)
 ax1=gca;
 set(ax1,'Box','on')
 set(gcf,'Color','w','Position', [0, 0, 600, 500])
@@ -573,9 +573,9 @@ set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTic
 % set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 
 %% Plotting critical k for all materials
-kcritmean(indsbad) = NaN;
+%kcritmean(indsbad) = NaN;
 figure
-histogram(kcritmean,25)
+histogram(kcritmean(setdiff(1:end,indsbad)),25)
 ax1=gca;
 set(ax1,'Box','on')
 set(gcf,'Color','w','Position', [0, 0, 600, 500])

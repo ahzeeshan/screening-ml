@@ -108,39 +108,39 @@ ngoodnets
 
 %% plotting parity plot against training data
 
-for i=1:num_coeffs
-    figure
-    scatter( coeffs(:,i), predcoeffs_tr(:,i,sortind_tr{i}(2)) ,80,'filled');axis equal;
-    hold on;
-    fplot(fx,'Linewidth',4)
-    title(['C-',num2str(i)],'Fontsize',24)
-    %xlim([0,100]);ylim([0,100]);
-    ax1=gca;
-    set(ax1,'Box','on')
-    set(gcf,'Color','w','Position', [0, 0, 600, 500])
-    xlabel(ax1,'train actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-    %%%export_fig([lattice,'-tr-C',num2str(i),'.pdf'])
-end
+% for i=1:num_coeffs
+%     figure
+%     scatter( coeffs(:,i), predcoeffs_tr(:,i,sortind_tr{i}(2)) ,80,'filled');axis equal;
+%     hold on;
+%     fplot(fx,'Linewidth',4)
+%     title(['C-',num2str(i)],'Fontsize',24)
+%     %xlim([0,100]);ylim([0,100]);
+%     ax1=gca;
+%     set(ax1,'Box','on')
+%     set(gcf,'Color','w','Position', [0, 0, 600, 500])
+%     xlabel(ax1,'train actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%     %%%export_fig([lattice,'-tr-C',num2str(i),'.pdf'])
+% end
 
 %% plotting parity plot against test data for the best case
-fx=@(x) x;
-for i=1:num_coeffs
-    figure
-    scatter( coeffstest(:,i), predcoeffs_test(:,i,sortind_tr{i}(1)) ,80,'filled');axis equal;
-    hold on;
-    fplot(fx,'Linewidth',4)
-    title(['C-',num2str(i)],'Fontsize',24)
-    %xlim([0,100]);ylim([0,100]);
-    ax1=gca;
-    set(ax1,'Box','on')
-    set(gcf,'Color','w','Position', [0, 0, 600, 500])
-    xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-    %%%export_fig([lattice,'-C',num2str(i),'.pdf'])
-end
+% fx=@(x) x;
+% for i=1:num_coeffs
+%     figure
+%     scatter( coeffstest(:,i), predcoeffs_test(:,i,sortind_tr{i}(1)) ,80,'filled');axis equal;
+%     hold on;
+%     fplot(fx,'Linewidth',4)
+%     title(['C-',num2str(i)],'Fontsize',24)
+%     %xlim([0,100]);ylim([0,100]);
+%     ax1=gca;
+%     set(ax1,'Box','on')
+%     set(gcf,'Color','w','Position', [0, 0, 600, 500])
+%     xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%     %%%export_fig([lattice,'-C',num2str(i),'.pdf'])
+% end
 
 
 %%
@@ -269,18 +269,18 @@ Rsq_trG
 save(strcat(lattice,'_posttr_results.mat'),'mps','meanGtr','stdGtr', 'indsbadtr','Cmatrixmeantr','Cmatrixstdtr');
 
 
-figure; hold on;
-scatter(Gvrhtr(setdiff(1:end,indsbadtr)),meanGtr(setdiff(1:end,indsbadtr))/10^9, 60,'filled');
-fplot(fx,'Linewidth',4);title('Training data G','Fontsize',24);
-ax1=gca;
-%axis([1 400 1 400]);
-set(ax1,'Box','on')
-%set(ax1,'xscale','log','yscale','log');
-set(gcf,'Color','w','Position', [0, 0, 600, 500]);
-xlabel(ax1,'DFT calculated (mp)','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman');
-%export_fig([lattice,'-trG.pdf'])
+% figure; hold on;
+% scatter(Gvrhtr(setdiff(1:end,indsbadtr)),meanGtr(setdiff(1:end,indsbadtr))/10^9, 60,'filled');
+% fplot(fx,'Linewidth',4);title('Training data G','Fontsize',24);
+% ax1=gca;
+% %axis([1 400 1 400]);
+% set(ax1,'Box','on')
+% %set(ax1,'xscale','log','yscale','log');
+% set(gcf,'Color','w','Position', [0, 0, 600, 500]);
+% xlabel(ax1,'DFT calculated (mp)','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman');
+% %export_fig([lattice,'-trG.pdf'])
 %% Test data shear modulus
 for i=1:num_coeffs
     model_choice(i,:) = datasample( sortind_tr{i}(1:ngoodnets_tr(i)) , combs);
@@ -385,39 +385,37 @@ end
 Rsq_ttG = calcRsq(meanGtt(setdiff(1:end,indsbadtt))/10^9, Gvrhtt(setdiff(1:end,indsbadtt)))
 save(strcat(lattice,'_posttt_results.mat'),'mps','meanGtt','stdGtt', 'indsbadtt','Cmatrixmeantt','Cmatrixstdtt');
 
-%scatter(Gtt/10^9, meanGtest/10^9, 60,'filled'); hold on;
-%fplot(fx,'Linewidth',4)
-figure;hold on;
-scatter(Gvrhtt(setdiff(1:end,indsbadtt)),meanGtt(setdiff(1:end,indsbadtt))/10^9, 60,'filled')
-errorbar(Gvrhtt(setdiff(1:end,indsbadtt)), meanGtt(setdiff(1:end,indsbadtt))/10^9, stdGtt(setdiff(1:end,indsbadtt))/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
-fplot(fx,'Linewidth',4);title('Test data G','Fontsize',24)
-%xlim([0,120]);ylim([0,120]);
-ax1=gca;
-axis([1 400 1 400])
-set(ax1,'Box','on','xscale','log','yscale','log')
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-%export_fig([lattice,'-ttG.pdf'])
 
-for i=1:21
-    figure
-    %scatter( Cmatrix_test(:,i), Cmatrixmeantt(:,i) ,80,'filled');axis equal;
-    errorbar(Cmatrix_test(:,i), Cmatrixmeantt(:,i), Cmatrixstdtt(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
-    
-    hold on;
-    fplot(fx,'Linewidth',4)
-    title(['C-',num2str(i)],'Fontsize',24)
-    %xlim([0,100]);ylim([0,100]);
-    ax1=gca;
-    set(ax1,'Box','on')
-    set(gcf,'Color','w','Position', [0, 0, 600, 500])
-    xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-    %%%export_fig([lattice,'-C',num2str(i),'.pdf'])
-end
+% figure;hold on;
+% scatter(Gvrhtt(setdiff(1:end,indsbadtt)),meanGtt(setdiff(1:end,indsbadtt))/10^9, 60,'filled')
+% errorbar(Gvrhtt(setdiff(1:end,indsbadtt)), meanGtt(setdiff(1:end,indsbadtt))/10^9, stdGtt(setdiff(1:end,indsbadtt))/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+% fplot(fx,'Linewidth',4);title('Test data G','Fontsize',24)
+% ax1=gca;
+% axis([1 400 1 400])
+% set(ax1,'Box','on','xscale','log','yscale','log')
+% set(gcf,'Color','w','Position', [0, 0, 600, 500])
+% xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% %export_fig([lattice,'-ttG.pdf'])
+
+% for i=1:21
+%     figure
+%     %scatter( Cmatrix_test(:,i), Cmatrixmeantt(:,i) ,80,'filled');axis equal;
+%     errorbar(Cmatrix_test(:,i), Cmatrixmeantt(:,i), Cmatrixstdtt(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+%     
+%     hold on;
+%     fplot(fx,'Linewidth',4)
+%     title(['C-',num2str(i)],'Fontsize',24)
+%     %xlim([0,100]);ylim([0,100]);
+%     ax1=gca;
+%     set(ax1,'Box','on')
+%     set(gcf,'Color','w','Position', [0, 0, 600, 500])
+%     xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+%     %%%export_fig([lattice,'-C',num2str(i),'.pdf'])
+% end
 
 
 %% Predictions on nt data
@@ -505,81 +503,63 @@ end
 save(strcat(lattice,'_post_results.mat'),'mps_nt','chimean', 'meanG', 'kcritmean','prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','indsbad','-v7.3');
 
 %% Materials Project prediction Comparison
-figure
-%meanG(indsbad)=NaN;
-%scatter(G_mp,meanG/10^9,'o')
-scatter(G_mp(setdiff(1:end,indsbad)), meanG(setdiff(1:end,indsbad))/10^9, 60,'filled'); hold on;
-fx=@(x) x;
-fplot(fx,'Linewidth',4)
-xlim([1,400]);ylim([1,400]);
-ax1=gca;
-set(ax1,'Box','on','xscale','log','yscale','log')
-%axis([0 400 0 400])
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-export_fig([lattice,'-G_mp.pdf'])
+% figure
+% scatter(G_mp(setdiff(1:end,indsbad)), meanG(setdiff(1:end,indsbad))/10^9, 60,'filled'); hold on;
+% fx=@(x) x;
+% fplot(fx,'Linewidth',4)
+% xlim([1,400]);ylim([1,400]);
+% ax1=gca;
+% set(ax1,'Box','on','xscale','log','yscale','log')
+% set(gcf,'Color','w','Position', [0, 0, 600, 500])
+% xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% export_fig([lattice,'-G_mp.pdf'])
 
 %% Materials Project comparison with error bars
-figure
-errorbar(G_mp(setdiff(1:end,indsbad)), meanG(setdiff(1:end,indsbad))/10^9, stdG(setdiff(1:end,indsbad))/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
-fplot(fx,'Linewidth',4);
-xlim([1,400]);ylim([1,400]);
-ax1=gca;
-set(ax1,'Box','on','xscale','log','yscale','log')
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-%export_fig([lattice,'-GwErr_mp.pdf'])
+% figure
+% errorbar(G_mp(setdiff(1:end,indsbad)), meanG(setdiff(1:end,indsbad))/10^9, stdG(setdiff(1:end,indsbad))/10^9,'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+% fplot(fx,'Linewidth',4);
+% xlim([1,400]);ylim([1,400]);
+% ax1=gca;
+% set(ax1,'Box','on','xscale','log','yscale','log')
+% set(gcf,'Color','w','Position', [0, 0, 600, 500])
+% xlabel(ax1,'mp-predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% %export_fig([lattice,'-GwErr_mp.pdf'])
 
 
 
 
 %% Probability of stability for all materials
-figure
-%prob_stable(indsbad)=NaN;
-% histogram(meanG/10^9,'NumBins',25)
-histogram(prob_stable(setdiff(1:end,indsbad)),12)
-ax1=gca;
-set(ax1,'Box','on')
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'\textbf{Probability of Stability}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-%
-%% Plotting chi for all materials
-%chimean(indsbad)=NaN;
-figure
-histogram(chimean(setdiff(1:end,indsbad)),25)
-ax1=gca;
-set(ax1,'Box','on')
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'\textbf{Stability parameter (kJ/mol.nm)}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-%xlim([120,200])
-
-% %%
 % figure
-% mat=3;
-% histogram(chi_new(mat,ind_posdefn{mat}),25)
+% histogram(prob_stable(setdiff(1:end,indsbad)),12)
+% ax1=gca;
+% set(ax1,'Box','on')
+% set(gcf,'Color','w','Position', [0, 0, 600, 500])
+% xlabel(ax1,'\textbf{Probability of Stability}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% %
+%% Plotting chi for all materials
+% figure
+% histogram(chimean(setdiff(1:end,indsbad)),25)
 % ax1=gca;
 % set(ax1,'Box','on')
 % set(gcf,'Color','w','Position', [0, 0, 600, 500])
 % xlabel(ax1,'\textbf{Stability parameter (kJ/mol.nm)}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-% ylabel(ax1,'\textbf{No. of Neural Networks}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 % set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
 
+
 %% Plotting critical k for all materials
-%kcritmean(indsbad) = NaN;
-figure
-histogram(kcritmean(setdiff(1:end,indsbad)),25)
-ax1=gca;
-set(ax1,'Box','on')
-set(gcf,'Color','w','Position', [0, 0, 600, 500])
-xlabel(ax1,'$k_{crit}$','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
-export_fig([lattice,'-kcritm_mp.pdf'])
+% figure
+% histogram(kcritmean(setdiff(1:end,indsbad)),25)
+% ax1=gca;
+% set(ax1,'Box','on')
+% set(gcf,'Color','w','Position', [0, 0, 600, 500])
+% xlabel(ax1,'$k_{crit}$','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% ylabel(ax1,'\textbf{No. of materials}','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+% set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% export_fig([lattice,'-kcritm_mp.pdf'])

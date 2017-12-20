@@ -32,10 +32,10 @@ index_out_coeffs = cell(num_coeffs,1);
 % cubic_nt = cubic_nt';  % Just converting the array to transpose %Now this becomes 692X13
 for coeff_num = 1:num_coeffs
     coeff_num
-    %[M,I]=min(mse_size{coeff_num}(:));
-    %[aa,bb]=ind2sub(size(mse_size{coeff_num}),I) ;
-    %hidden_layer_size = bb 
-    hidden_layer_size = hidden_layer_av(coeff_num) %you can provide a row vector which can represent if we need multiple hidden layers
+    [M,I]=min(mse_size{coeff_num}(:));
+    [aa,bb]=ind2sub(size(mse_size{coeff_num}),I) ;
+    hidden_layer_size = bb 
+    %hidden_layer_size = hidden_layer_av(coeff_num) %you can provide a row vector which can represent if we need multiple hidden layers
     % pre processing normalization
     feature_arr = feature_list{coeff_num};
     
@@ -136,4 +136,4 @@ end
 ngoodnets
 
 toc;
-save(strcat(lattice,'_final_results.mat'),'net_storage_complete','index_out_coeffs','tr_storage_complete')
+save(strcat(lattice,'_final_results_min.mat'),'net_storage_complete','index_out_coeffs','tr_storage_complete')

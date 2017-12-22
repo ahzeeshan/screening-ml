@@ -7,7 +7,7 @@ tic;
 
 mycluster = parcluster('local')
 mycluster.JobStorageLocation = strcat(getenv('SCRATCH'),'/.matlab/', getenv('SLURM_JOB_ID'))
-mycluster.NumWorkers = str2num(getenv('SLURM_JOB_CPUS_PER_NODE'))
+mycluster.NumWorkers = str2num(getenv('SLURM_NTASKS'))
 parpool(mycluster, mycluster.NumWorkers)
 saveProfile(mycluster)
 
@@ -36,7 +36,7 @@ for coeff_num = 1:num_coeffs
     %[M,I]=min(mse_size{coeff_num}(:));
     %[aa,bb]=ind2sub(size(mse_size{coeff_num}),I) ;
     %hidden_layer_size = bb 
-    hidden_layer_size = hidden_layer_av(coeff_num) %you can provide a row vector which can represent if we need multiple hidden layers
+    hidden_layer_size = hidden_layer_av(coeff_num); %you can provide a row vector which can represent if we need multiple hidden layers
     % pre processing normalization
     feature_arr = feature_list{coeff_num};
     

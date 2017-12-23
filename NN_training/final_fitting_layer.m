@@ -66,18 +66,18 @@ for coeff_num = 1:num_coeffs
     val_perf_reqd=0.01;
     tr_perf_reqd = 0.01;
     reg_tr_reqd=0.9;
-    Rsq_val_reqd = 0.7;
+    Rsq_val_reqd = 0.8;
     Rsq_tr_reqd = 0.85;
     max_index = 1000;
     ind_out = zeros(sample_test, 1);
     net_storage = cell(sample_test,1);
     tr_storage = cell(sample_test,1);
     
-    while ( hidden_layer_size==hidden_layer_av(coeff_num) ) || ( all(ind_out==1) && (hidden_layer_size <= length(feature_list{coeff_num})) ) 
+    while ( hidden_layer_size==hidden_layer_av(coeff_num) ) || ( length(find(ind_out==0))<10 && (hidden_layer_size <= length(feature_list{coeff_num})) ) 
         hidden_layer_size
         parfor random_weights = 1:1:sample_test
             random_weights
-            val_min = 1;
+            val_min = 1000;
             tr_perf_min = 1;
             net_min = [];
             bool_var = 1;
@@ -89,6 +89,11 @@ for coeff_num = 1:num_coeffs
             net.divideParam.trainRatio = 85/100;
             net.divideParam.valRatio = 15/100;
             net.divideParam.testRatio = 0/100;
+            if hidden_layer_size>=(length(ytrain)* ...
+                                   net.divideParam.trainRatio - ...
+                                   1)/(length(feature_list{coeff_num})+2)
+                net.performParam.regularization = 0.01;
+            end
             %net.performParam.regularization = 0.01;
             net.trainParam.max_fail = 15;
             
@@ -100,13 +105,13 @@ for coeff_num = 1:num_coeffs
                 out_train = net(XTRAIN);
                 trTarg = ytrain(tr.trainInd);
                 trOut = out_train(tr.trainInd);
-                [reg_tr,~,~] = regression(trTarg, trOut);
+                                [reg_tr,~,~] = regression(trTarg, trOut);
                 Rsq_tr = 1 - sum((ytrain(tr.trainInd) - out_train(tr.trainInd)).^2)/sum((ytrain(tr.trainInd) - mean(ytrain(tr.trainInd))).^2);
                 Rsq_val = 1 - sum((ytrain(tr.valInd) - out_train(tr.valInd)).^2)/sum((ytrain(tr.valInd) - mean(ytrain(tr.valInd))).^2);
                 %[reg_val,~,~] = regression(vTarg, vOut);
                 %[reg_test,~,~] = regression(testTarg, testOut)
-                val_perf = mse(net,ytrain(tr.valInd),out_train(tr.valInd));
-                tr_perf = mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
+                val_perf = tr.vperf(end);%mse(net,ytrain(tr.valInd),out_train(tr.valInd));
+                tr_perf = tr.perf(end);%mse(net,ytrain(tr.trainInd),out_train(tr.trainInd));
                 %bool_var = (val_perf>val_perf_reqd)||(reg_tr<reg_tr_reqd); % (tr_perf>tr_perf_reqd) Training parameter
                 bool_var = (Rsq_val < Rsq_val_reqd) || (Rsq_tr < Rsq_tr_reqd)
                 if val_perf<val_min %&& tr_perf<tr_perf_min
@@ -142,4 +147,4 @@ end
 ngoodnets
 
 toc;
-save(strcat(lattice,'_final_results.mat'),'net_storage_complete','index_out_coeffs','tr_storage_complete')
+save(strcat(lattice,'_layerfinal_results.mat'),'net_storage_complete','index_out_coeffs','tr_storage_complete')

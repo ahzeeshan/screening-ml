@@ -20,7 +20,7 @@ import shelve
 
 
 # Number of random trials
-NUM_TRIALS = 50
+NUM_TRIALS = 100
 
 # Load the dataset
 lattice = 'cubic'

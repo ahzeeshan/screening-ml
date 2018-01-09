@@ -80,8 +80,6 @@ for coeff in range(y.shape[1]):
         outer_cv = KFold(n_splits=3, shuffle=True)
         for name, (model, params) in models_and_parameters.items():
             pipeline = Pipeline([('transformer', scaler), ('reg', model)])
-            non_nested_scores = np.zeros(NUM_TRIALS)
-            nested_scores = np.zeros(NUM_TRIALS)
             # Choose cross-validation techniques for the inner and outer loops,
             # independently of the dataset.
             # Non_nested parameter search and scoring

@@ -39,8 +39,8 @@ models_and_parameters = {
             {'reg__kernel':['rbf','linear'], 'reg__alpha': [1e0, 0.1, 1e-2, 1e-3], 'reg__gamma': np.logspace(-2, 2, 5)}),
     'gpr': (GaussianProcessRegressor(kernel = kernels.RBF()),
             {'reg__kernel__length_scale':[0.01, 0.1, 1., 2., 10., 100.], 'reg__kernel__length_scale_bounds':[(1e-2,1.),(1e-1,1.),(1e-1,10.),(1.,10.),(1.,100.),(1e-2,1e2)]}),
-    'gbr': (GradientBoostingRegressor(learning_rate=0.01, min_samples_split=2, max_features='sqrt', loss='ls', subsample=0.4),
-            {'reg__max_depth': [2,3,4,10,20,50],'reg__min_samples_leaf': [2,3,4,10], 'reg__learning_rate':[0.01, 0.1], 'reg__max_features':['auto', 'sqrt', 'log2']}),
+    'gbr': (GradientBoostingRegressor(learning_rate=0.01, loss='ls', n_estimators=1000),
+            {'reg__max_depth': [2, 3, 4, 10, 20, 50],'reg__min_samples_leaf': [2,3,4,10], 'reg__max_features':['auto', 'sqrt', 'log2'],'reg__subsample':[0.3, 0.4, 0.5],'reg__min_samples_split': [2, 3, 4]}),
     'ada': (AdaBoostRegressor(base_estimator=DecisionTreeRegressor(),n_estimators=500,learning_rate=0.01),#max_depth alone doesn't work probably
             {'reg__base_estimator__max_depth': [2,3,4,10], 'reg__base_estimator':[DecisionTreeRegressor(max_depth = 4, max_features='auto'), 
                                                                                      DecisionTreeRegressor(max_depth = None, max_features='auto'),
@@ -48,8 +48,8 @@ models_and_parameters = {
                                                                                      DecisionTreeRegressor(max_depth = None, max_features='sqrt')]}),
     'svr': (SVR(),
             {'reg__C': [0.01, 0.05, 0.1, 1], 'reg__kernel': ['linear', 'rbf']}),
-    'rf': (RandomForestRegressor(),
-           {'reg__max_depth': [5, 10, 50]}),
+    'rf': (RandomForestRegressor(n_estimators=1000),
+           {'reg__max_depth': [None, 5, 10, 50,100],'reg__max_features':['auto','sqrt','log2'],'reg__min_samples_split':[2,3,4],'reg__min_samples_leaf':[2,3,4]}),
     'brg': (linear_model.BayesianRidge(fit_intercept=True),
             {'reg__alpha_1': [1.e-6, 1.e-5]}),
     'lars': (linear_model.Lars(fit_intercept = True, normalize=False),
@@ -74,15 +74,12 @@ for coeff in range(y.shape[1]):
 # Loop for each trial
 for coeff in range(y.shape[1]):
     print('-----coeff = '+str(coeff)+'------\n')
-    average_scores_across_outer_folds_for_each_model = dict()
     for i in range(NUM_TRIALS):
         print('Trial '+str(i)+'\n')
         inner_cv = KFold(n_splits=3, shuffle=True)
         outer_cv = KFold(n_splits=3, shuffle=True)
         for name, (model, params) in models_and_parameters.items():
             pipeline = Pipeline([('transformer', scaler), ('reg', model)])
-            non_nested_scores = np.zeros(NUM_TRIALS)
-            nested_scores = np.zeros(NUM_TRIALS)
             # Choose cross-validation techniques for the inner and outer loops,
             # independently of the dataset.
             # Non_nested parameter search and scoring

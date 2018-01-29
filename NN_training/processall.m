@@ -1,16 +1,20 @@
 clear all; close all;clc;
+calcRsq = @(predvals,actualvals) 1 - sum((predvals - actualvals).^2)/sum((actualvals - mean(actualvals)).^2);
 
 %%
 lattices = {'cubic', 'hexagonal', 'monoclinic', 'orthorhombic', 'tetragonal-2', 'trigonal-2','triclinic'};
-
+lattices = {'hexagonal'};
+filesaveflag = '_min';
+filesaveflag = '';
 %lattices={'tetragonal-2'};
 mps_alltr = []; mps_alltt = []; Gtt = [];Gtr=[]; Gatt = [];Gatr=[];Cmatlist=[];
 Cmatttlist = [];Cmattrlist = [];Cmatttlistact = [];Cmattrlistact = [];
 Cmatstdttlist = []; Cmatstdtrlist = [];
+coeffstrmeanlist = []; coeffstrstdlist = [];
+coeffsttmeanlist = []; coeffsttstdlist = [];
 for i=1:length(lattices)
-    disp(lattices(i))
     lattice = lattices{i};
-    S = load([lattice,'_posttt_results.mat']);
+    S = load([lattice,'_posttt_results',filesaveflag,'.mat']);
     Sa = load(fullfile('..','data-gen',[lattice,'-data-posd.mat']));
     S.Gvrhtt = Sa.Gvrh(end-floor(0.1*length(Sa.Gvrh))+1:end);
     S.coeffstest = Sa.ydata(end-floor(0.1*size(Sa.xdata,1))+1:end,:);
@@ -19,7 +23,7 @@ for i=1:length(lattices)
     Gtt = [Gtt, S.meanGtt(setdiff(1:end,S.indsbadtt))/1e9];
     Gatt = [Gatt, S.Gvrhtt(setdiff(1:end,S.indsbadtt))];
     
-    size(S.Gvrhtt(setdiff(1:end,S.indsbadtt)))
+    %size(S.Gvrhtt(setdiff(1:end,S.indsbadtt)))
     Cmatttlist = [Cmatttlist; S.Cmatrixmeantt(setdiff(1:end,S.indsbadtt),:,:)];
     Cmatstdttlist = [Cmatstdttlist; S.Cmatrixstdtt(setdiff(1:end,S.indsbadtt),:,:)];
     S.Cmatrix_test = []; Ta.Cmatrix_test=[];
@@ -27,9 +31,12 @@ for i=1:length(lattices)
         S.Cmatrix_test(mat,:,:) = constructC(lattice,S.coeffstest(mat,:));
     end
     Cmatttlistact = [Cmatttlistact; S.Cmatrix_test];
-    size(Cmatttlistact,1)
-
-    T = load([lattice,'_posttr_results.mat']);
+    
+    coeffsttmeanlist = [coeffsttmeanlist; S.coeffs_matttmean];
+    coeffsttstdlist = [coeffsttstdlist; S.coeffs_matttstd];
+    
+    
+    T = load([lattice,'_posttr_results',filesaveflag,'.mat']);
     Ta = load(fullfile('..','data-gen',[lattice,'-data-posd.mat']));
     T.Gvrhtr = Ta.Gvrh(1:end-floor(0.1*length(Ta.Gvrh)));
     T.coeffstr = Ta.ydata(1:end-floor(0.1*length(Ta.Gvrh)),:);
@@ -44,7 +51,11 @@ for i=1:length(lattices)
         T.Cmatrix_test(mat,:,:) = constructC(lattice,T.coeffstr(mat,:));
     end
     Cmattrlistact = [Cmattrlistact; T.Cmatrix_test];
-    size(Cmattrlistact,1)
+    
+    coeffstrmeanlist = [coeffstrmeanlist; T.coeffs_mattrmean];
+    coeffstrstdlist = [coeffstrstdlist; T.coeffs_mattrstd];
+    
+    
 end
 
 mae(Gtr,Gatr)
@@ -58,16 +69,13 @@ fplot(fx,'Linewidth',2);title('Test data G','Fontsize',24);
 ax1=gca;
 axis([1 400 1 400])
 set(ax1,'Box','on','xscale','log','yscale','log')
-set(gcf,'Color','w','Position', [0, 0, 600, 500]);
+set(gcf,'Color','w','Position', [0, 0, 500, 400]);
 xlabel(ax1,'DFT calculated (mp)','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
-ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+ylabel(ax1,'NN model predicted','Interpret','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
 set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman');
 %export_fig('all-lattice-ttG.pdf')
 
-%%
-%for mat=1:size(S.coeffstest,1)
-%    Sa.Cmatrix_test(mat,:,:) = constructC(lattices{1},S.coeffstest(mat,:));
-%end
+%% Test data
 for i=1:36
     
     if not(all(Cmatttlist(:,i)==0) && all(Cmatttlistact(:,i)==0))
@@ -75,6 +83,7 @@ for i=1:36
         %scatter( Cmatrix_test(:,i), Cmatrixmeantt(:,i) ,80,'filled');axis equal;
         %errorbar(Sa.Cmatrix_test(:,i), S.Cmatrixmeantt(:,i), S.Cmatrixstdtt(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
         errorbar(Cmatttlistact(:,i), Cmatttlist(:,i), Cmatttlist(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+        %mae(Cmatttlistact(:,i), Cmatttlist(:,i));
         hold on;
         fplot(fx,'Linewidth',4)
         title(['test C-',num2str(i)],'Fontsize',24)
@@ -90,6 +99,47 @@ for i=1:36
     end
 end
 
+%% Training data only one symmetry
+
+for i=1:size(T.coeffs_mattrmean,2)
+    figure
+    errorbar(T.coeffstr(:,i), coeffstrmeanlist(:,i), coeffstrstdlist(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+    %mae(T.coeffstr(:,i), coeffstrmeanlist(:,i))
+    calcRsq(coeffstrmeanlist(:,i),T.coeffstr(:,i))
+    hold on;
+    fplot(fx,'Linewidth',4)
+    title(['train C-',num2str(i)],'Fontsize',24)
+    %xlim([0,100]);ylim([0,100]);
+    
+    ax1=gca;%axis([1 400 1 400])
+    set(ax1,'Box','on')
+    set(gcf,'Color','w','Position', [0, 0, 600, 500])
+    xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+end
+
+
+%% Test data only one symmetry
+
+for i=1:size(S.coeffs_matttmean,2)
+    figure
+    errorbar(S.coeffstest(:,i), coeffsttmeanlist(:,i), coeffsttstdlist(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+    mae(S.coeffstest(:,i), coeffsttmeanlist(:,i))
+    hold on;
+    fplot(fx,'Linewidth',4)
+    title(['test C-',num2str(i)],'Fontsize',24)
+    %xlim([0,100]);ylim([0,100]);
+    
+    ax1=gca;%axis([1 400 1 400])
+    set(ax1,'Box','on')
+    set(gcf,'Color','w','Position', [0, 0, 600, 500])
+    xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+end
+
+%%
 for i=1:36
     
     if not(all(Cmattrlist(:,i)==0) && all(Cmattrlistact(:,i)==0))

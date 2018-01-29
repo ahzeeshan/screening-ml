@@ -5,6 +5,7 @@ import scipy.io
 import math
 import pymatgen
 from pymatgen.analysis.structure_analyzer import VoronoiCoordFinder as VCF
+import pdb
 
 with open('Li-cmpd-data-Dec18.json') as f:
 	data = json.load(f)
@@ -69,7 +70,10 @@ def generate_XYdata(symmetry, equals):
 					Kr.append(elem['elasticity']['K_Reuss'])
 					Kv.append(elem['elasticity']['K_Voigt'])
 					Kvrh.append(elem['elasticity']['K_VRH'])
-					xdata.append(np.hstack((feature[0:12],feature[13:16],feature[18:])))
+					#pdb.set_trace()
+					#xdata.append(np.hstack((feature[0:12],feature[13:16],feature[18:])))
+					xdata.append(np.hstack((feature[0:16],feature[18:],struc.density)))
+
 					elastic_mat = elem['elasticity']['elastic_tensor']
 					y = []
 					for equal_subsets in equals:
@@ -78,7 +82,7 @@ def generate_XYdata(symmetry, equals):
 							val = val + elastic_mat[subset[0]-1][subset[1]-1]
 						y.append(val / len(equal_subsets)) #averaged over all equals
 					ydata.append(y)
-	scipy.io.savemat(symmetry+'-data-posd',mdict={'mps':mps_data,'xdata':xdata,'ydata':ydata,'Gr':Gr,'Gv':Gv,'Gvrh':Gvrh,'Kr':Kr,'Kv':Kv,'Kvrh':Kvrh,'volratt':volrat_data,'coordt':coord_data})
+	scipy.io.savemat(symmetry+'-data-posd-with-den',mdict={'mps':mps_data,'xdata':xdata,'ydata':ydata,'Gr':Gr,'Gv':Gv,'Gvrh':Gvrh,'Kr':Kr,'Kv':Kv,'Kvrh':Kvrh,'volratt':volrat_data,'coordt':coord_data})
 
 from constants import cubic_equal, hex_equal, monoclinic_equal, ortho_equal, tetra1_equal, tetra2_equal, trig1_equal, trig2_equal, triclinic_equal, asym_mp
 

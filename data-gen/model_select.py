@@ -29,10 +29,10 @@ scaler = preprocessing.StandardScaler().fit(X)
 models_and_parameters = {
     'lasso': (linear_model.Lasso(),
               {'reg__estimator__alpha': [0.01, 0.1, 0.5, 1.]}),
+    'elnet': (linear_model.ElasticNet(),
+              {'reg__estimator__alpha':[0.01, 0.1, 0.5, 1], 'reg__estimator__l1_ratio':[0.,0.1,0.5,1.]}),
     'gbr': (GradientBoostingRegressor(learning_rate=0.01, min_samples_split=2, max_features='sqrt', loss='ls', subsample=0.4),
             {'reg__estimator__max_depth': [2,3,4],'reg__estimator__min_samples_leaf': [2,3,4], 'reg__estimator__learning_rate':[0.01, 0.1], 'reg__estimator__max_features':['auto', 'sqrt', 'log2']}),
-    'elnet': (linear_model.ElasticNet(),
-              {'reg__estimator__alpha':[0.01, 0.1, 0.5, 1], 'reg__estimator__l1_ratio':[0.,0.1,0.5,1.,2.]}),
     'ada': (AdaBoostRegressor(DecisionTreeRegressor(),n_estimators=500),
             {'reg__estimator__base_estimator__max_depth': [2,3,4], 'reg__estimator__learning_rate':[0.01, 0.1]}),
     'svr': (SVR(),

@@ -1,13 +1,16 @@
 clear all
 
 %% Here you should put the predicted valued file with non_training data.
+filesaveflag = '_min';
+filesaveflag = '';
+
 lattice = strtrim(fileread('lattice-type.txt'));
 load(fullfile('..','data-gen',strcat(lattice,'-non-training-data.mat')));
 mps_nt = mps; clear mps;
 load(fullfile('..','data-gen',strcat('pred-',lattice,'-non-training-data.mat')));
 G_mp = G; K_mp = K; clear G K;
 load(fullfile('..','Linear',strcat('features_',lattice,'.mat')));
-load(strcat(lattice,'_final_results.mat'));
+load(strcat(lattice,'_layerfinal_brresults.mat'));
 load(fullfile('..','data-gen',strcat(lattice,'-data-posd.mat')));
 
 disp(lattice)
@@ -30,6 +33,7 @@ sz_nt = size(cubic_nt,1);
 sz_tt = size(xtest,1);
 num_coeffs = size(coeffs,2);
 tr_perf = zeros(num_coeffs, num_samples);
+v_perf = zeros(num_coeffs, num_samples);
 Coeffs_cell = cell(num_samples, num_coeffs);
 predcoeffs = zeros(sz_nt, num_coeffs, num_samples);
 predcoeffs_test = zeros(sz_tt, num_coeffs, num_samples);
@@ -73,6 +77,8 @@ for coeff_num = 1:num_coeffs
         predcoeffs_test(:, coeff_num, num_samp) = Coeffs_test_mat;
         
         tr_perf(coeff_num,num_samp) = calcRsq(predcoeffs_tr(:,coeff_num,num_samp),coeffs(:,coeff_num));
+        v_perf(coeff_num, num_samp) = tr.vperf(end);
+ 
         %1 - sum((coeffs(:,coeff_num) - predcoeffs_tr(:,coeff_num,num_samp)).^2)/sum((coeffs(:,coeff_num) - mean(coeffs(:,coeff_num))).^2);
         test_perf(coeff_num, num_samp) = calcRsq(predcoeffs_test(:,coeff_num,num_samp),coeffstest(:,coeff_num));
         %1 - sum((coeffstest(:,coeff_num) - predcoeffs_test(:,coeff_num,num_samp)).^2)/sum((coeffstest(:,coeff_num) - mean(coeffstest(:,coeff_num))).^2);
@@ -94,8 +100,11 @@ for i=1:num_coeffs
         ngoodnets_tr(i) = 100;
     end
     ngoodnets(i) = min(ngoodnets_test(i),ngoodnets_tr(i));
+    ngoodnetsv(i) = length(find(index_out_coeffs{i}==0));
+    
     [sortedtestperf{i},sortind_test{i}] = sort(test_perf(i,:),'descend');
     [sortedtrperf{i},sortind_tr{i}] = sort(tr_perf(i,:),'descend');
+    [sortedvperf{i},sortind_v{i}] = sort(v_perf(i,:));
     %ngoodnets(i) = 1;
 end
 %ngoodnets_tr=1000*ones(1,num_coeffs)
@@ -105,6 +114,7 @@ end
 ngoodnets_tr
 ngoodnets_test
 ngoodnets
+ngoodnetsv
 
 %% plotting parity plot against training data
 
@@ -145,14 +155,6 @@ ngoodnets
 
 %%
 combs = 10000;
-%cubic_mat = zeros(6,6,sz_nt,combs); -- not storing right now
-% G_v = zeros(sz_nt,combs);
-% G_r = zeros(sz_nt,combs);
-% B_v = zeros(sz_nt,combs);
-% B_r = zeros(sz_nt,combs);
-% Nu = zeros(sz_nt,combs);
-% G = zeros(sz_nt,combs);
-% B = zeros(sz_nt,combs);
 nue = 0.42;
 VM = 1.3e-05;
 Ge = 3.4e09;
@@ -172,7 +174,7 @@ end
 
 %% Training data from Model
 for i=1:num_coeffs
-    model_choice(i,:) = datasample( sortind_tr{i}(1:ngoodnets_tr(i)) , combs);
+    model_choice(i,:) = datasample( find(index_out_coeffs{i}==0) , combs);
 end
 Gnewtr = cell(1,sz_tr);
 Nunewtr = cell(1,sz_tr);
@@ -191,6 +193,7 @@ for mat=1:sz_tr
         for j=1:num_coeffs
             coeffs_modeltr = [coeffs_modeltr, predcoeffs_tr(mat, j, model_choice(j,i))];
         end
+        coeffs_mattr(mat,i,:) = coeffs_modeltr;
         Cmat = constructC(lattice, coeffs_modeltr);
         Cmatrixtr{mat,i} = Cmat;
         [~,p] = chol(Cmat);
@@ -248,6 +251,8 @@ for mat = 1:sz_tr
         D = cat(3,Cmatrixtr{mat,ind_posdefntr{mat}});
         Cmatrixmeantr(mat,:,:) = mean(D,3);
         Cmatrixstdtr(mat,:,:) = std(D,[],3);
+        coeffs_mattrmean(mat,:) = mean(coeffs_mattr(mat,:,:));
+        coeffs_mattrstd(mat,:) = std(coeffs_mattr(mat,:,:));
     else
         indsbadtr = [indsbadtr, mat];
         prob_stabletr(mat) = NaN;
@@ -260,13 +265,33 @@ for mat = 1:sz_tr
         D = cat(3,Cmatrixtr{mat,ind_posdefntr{mat}});
         Cmatrixmeantr(mat,:,:) = NaN;
         Cmatrixstdtr(mat,:,:) = NaN;
+        coeffs_mattrmean(mat,:) = NaN;
+        coeffs_mattrstd(mat,:) = NaN;
     end
 end
 
 
 Rsq_trG = calcRsq(meanGtr(setdiff(1:end,indsbadtr))/10^9, Gvrhtr(setdiff(1:end,indsbadtr)));
 Rsq_trG
-save(strcat(lattice,'_posttr_results.mat'),'mps','meanGtr','stdGtr', 'indsbadtr','Cmatrixmeantr','Cmatrixstdtr');
+save([lattice,'_posttr_results',filesaveflag,'.mat'],'mps','meanGtr','stdGtr', 'indsbadtr','Cmatrixmeantr','Cmatrixstdtr','coeffs_mattrmean','coeffs_mattrstd');
+
+% for i=1:size(coeffs_mattrmean,2)
+%     figure
+%     errorbar(coeffs(:,i), coeffs_mattrmean(:,i), coeffs_mattrstd(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+%     %mae(T.coeffstr(:,i), coeffstrmeanlist(:,i))
+%     calcRsq(coeffs_mattrmean(:,i),coeffs(:,i))
+%     hold on;
+%     fplot(fx,'Linewidth',4)
+%     title(['train C-',num2str(i)],'Fontsize',24)
+%     %xlim([0,100]);ylim([0,100]);
+%     
+%     ax1=gca;%axis([1 400 1 400])
+%     set(ax1,'Box','on')
+%     set(gcf,'Color','w','Position', [0, 0, 600, 500])
+%     xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+%     set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+% end
 
 
 % figure; hold on;
@@ -283,7 +308,7 @@ save(strcat(lattice,'_posttr_results.mat'),'mps','meanGtr','stdGtr', 'indsbadtr'
 % %export_fig([lattice,'-trG.pdf'])
 %% Test data shear modulus
 for i=1:num_coeffs
-    model_choice(i,:) = datasample( sortind_tr{i}(1:ngoodnets_tr(i)) , combs);
+    model_choice(i,:) = datasample( find(index_out_coeffs{i}==0) , combs);
 end
 %Cmat_tt = cell(1,sz_tt);
 Gnewtt = cell(1,sz_tt);
@@ -305,6 +330,7 @@ for mat=1:sz_tt
         for j=1:num_coeffs
             coeffs_model = [coeffs_model, predcoeffs_test(mat, j, model_choice(j,i))];
         end
+        coeffs_mattt(mat,i,:) = coeffs_model;
         Cmat = constructC(lattice, coeffs_model);
         
         %Cmat_tt = constructC(lattice, coeffstest(mat,:));
@@ -378,12 +404,36 @@ for mat = 1:sz_tt
         D = cat(3,Cmatrixtt{mat,ind_posdefntt{mat}});
         Cmatrixmeantt(mat,:,:) = mean(D,3);
         Cmatrixstdtt(mat,:,:) = std(D,[],3);
+        coeffs_matttmean(mat,:) = mean(coeffs_mattr(mat,:,:));
+        coeffs_matttstd(mat,:) = std(coeffs_mattr(mat,:,:));
     else
         indsbadtt = [indsbadtt, mat];
+        coeffs_matttmean(mat,:) = NaN;
+        coeffs_matttstd(mat,:) = NaN;
     end
 end
 Rsq_ttG = calcRsq(meanGtt(setdiff(1:end,indsbadtt))/10^9, Gvrhtt(setdiff(1:end,indsbadtt)))
-save(strcat(lattice,'_posttt_results.mat'),'mps','meanGtt','stdGtt', 'indsbadtt','Cmatrixmeantt','Cmatrixstdtt');
+save([lattice,'_posttt_results',filesaveflag,'.mat'],'mps','meanGtt','stdGtt', 'indsbadtt','Cmatrixmeantt','Cmatrixstdtt','coeffs_matttmean','coeffs_matttstd');
+
+for i=1:size(coeffs_matttmean,2)
+    figure; hold on;
+    errorbar(coeffs(:,i), coeffs_mattrmean(:,i), coeffs_mattrstd(:,i),'o','MarkerSize',10,'MarkerEdgeColor','b','MarkerFaceColor','b'); hold on;
+    %mae(T.coeffstr(:,i), coeffstrmeanlist(:,i))
+    calcRsq(coeffs_mattrmean(:,i),coeffs(:,i))
+    errorbar(coeffstest(:,i), coeffs_matttmean(:,i), coeffs_matttstd(:,i),'o','MarkerSize',10,'MarkerEdgeColor','r','MarkerFaceColor','r'); hold on;
+    %mae(T.coeffstr(:,i), coeffstrmeanlist(:,i))
+    calcRsq(coeffs_matttmean(:,i),coeffstest(:,i))
+    fplot(fx,'Linewidth',4)
+    title(['train test C-',num2str(i)],'Fontsize',24)
+    %xlim([0,100]);ylim([0,100]);
+    
+    ax1=gca;%axis([1 400 1 400])
+    set(ax1,'Box','on')
+    set(gcf,'Color','w','Position', [0, 0, 600, 500])
+    xlabel(ax1,'test actual','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    ylabel(ax1,'NN model predicted','Interpreter','latex','FontWeight','bold','FontSize',28,'Fontname','Times New Roman');
+    set(ax1,'FontName','Arial','FontSize',20,'FontWeight','bold','LineWidth',4,'YTickmode','auto','Fontname','Times New Roman')
+end
 
 
 % figure;hold on;
@@ -500,7 +550,7 @@ for mat = 1:sz_nt
         indsbad = [indsbad, mat];
     end
 end
-save(strcat(lattice,'_post_results.mat'),'mps_nt','chimean', 'meanG', 'kcritmean','prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','indsbad','-v7.3');
+save([lattice,'_post_results',filesaveflag,'.mat'],'mps_nt','chimean', 'meanG', 'kcritmean','prob_stable', 'stdG', 'ngoodnets','ind_posdefn','Cmatrixmean','Cmatrixstd','indsbad','-v7.3');
 
 %% Materials Project prediction Comparison
 % figure

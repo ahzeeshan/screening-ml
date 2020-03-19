@@ -1,5 +1,5 @@
 # screening-ml
-Data and analysis of results for the paper: "Machine Learning Enabled Computational Screening of Inorganic Solid Electrolytes for Suppression of Dendrite Formation in Lithium Metal Anodes" [ACS Cent. Sci.](https://pubs.acs.org/doi/abs/10.1021/acscentsci.8b00229)
+Data and analysis of results for the paper: "Machine Learning Enabled Computational Screening of Inorganic Solid Electrolytes for Suppression of Dendrite Formation in Lithium Metal Anodes" [ACS Cent. Sci. 4, 996 (2018)](https://pubs.acs.org/doi/abs/10.1021/acscentsci.8b00229)
 
 The `scikit-learn` machine learning library is used for regression models for anisotropic material screening. The `data-gen` folder contains the codes for organization of data into different symmetry classes and regression models.
 
